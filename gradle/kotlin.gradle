@@ -1,0 +1,8 @@
+apply plugin: "kotlin"
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+dependencies {
+    implementation(lib.jetBrains.annotations) { transitive false }
+    implementation(lib.jetBrains.kotlin.stdLib) { transitive false }
+    implementation(lib.jetBrains.kotlin.stdLibCommon) { transitive false }
+}

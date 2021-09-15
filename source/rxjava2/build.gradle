@@ -1,0 +1,11 @@
+apply plugin: "maven"
+apply from: "$rootDir/gradle/kotlin.gradle"
+apply from: "$rootDir/gradle/coverage.gradle"
+dependencies {
+    implementation(lib.reactiveStreams) { transitive false }
+    implementation(lib.reactiveX.rxJava2) { transitive false }
+}
+dependencies {
+    testImplementation(libTest.hamcrest) { transitive false }
+    testImplementation(libTest.jUnit) { transitive false }
+}

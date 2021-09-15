@@ -1,0 +1,5 @@
+language: java
+
+script: ./gradlew test
+
+after_success: bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r lib/build/reports/jacoco/test/jacocoTestReport.xml
