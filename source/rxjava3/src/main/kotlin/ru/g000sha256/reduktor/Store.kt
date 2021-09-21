@@ -2,10 +2,13 @@ package ru.g000sha256.reduktor
 
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.functions.Action
 import io.reactivex.rxjava3.processors.BehaviorProcessor
-import io.reactivex.rxjava3.processors.FlowableProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
 
 class Store<A, S>(
@@ -19,64 +22,236 @@ class Store<A, S>(
 
     val states: Flowable<S>
 
-    private val stateLock = Any()
-    private val subscriptionLock = Any()
-    private val dispatcher: Dispatcher<A>
-    private val disposables = Disposables()
-    private val actionsFlowableProcessor: FlowableProcessor<A> = PublishProcessor.create()
-    private val statesFlowableProcessor: FlowableProcessor<S> = BehaviorProcessor.createDefault(initialState)
+    private val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
+    private val dispatcher: Dispatcher<A> = DispatcherImpl()
+    private val lock = Lock()
+    private val mutableList = mutableListOf<Disposable>()
+    private val mutableMap = mutableMapOf<String, Disposable>()
+    private val publishProcessor = PublishProcessor.create<A>()
+
+    private val thread: String
+        get() {
+            val thread = Thread.currentThread()
+            return thread.name
+        }
 
     private var subscriptions = 0
     private var state = initialState
 
     init {
-        dispatcher = Dispatcher(actionsFlowableProcessor, disposables)
-        states = statesFlowableProcessor
-            .doOnCancel { synchronized(subscriptionLock) { if (--subscriptions == 0) disposables.clear() } }
-            .doOnSubscribe { synchronized(subscriptionLock) { if (++subscriptions == 1) subscribe() } }
+        states = behaviorProcessor
+            .doOnCancel { stopIfNeeded() }
+            .doOnSubscribe { startIfNeeded() }
             .onBackpressureLatest()
     }
 
     private fun handleAction(action: A) {
-        val logger = logger
-        logger?.invoke("ACTION --> $action")
-        val oldState = state
-        logger?.invoke("STATE  --> $oldState")
-        val newState = reducer.invoke(action, oldState)
-        if (newState == oldState) {
-            logger?.invoke("STATE      NOT CHANGED")
-        } else {
-            state = newState
-            logger?.invoke("STATE  <-- $newState")
-            statesFlowableProcessor.onNext(newState)
+        lock.sync {
+            val oldState = state
+            logActionStart(action, oldState)
+            val newState = reducer.invoke(action, oldState)
+            if (newState == oldState) {
+                logActionEnd()
+            } else {
+                state = newState
+                logActionEnd(newState)
+                behaviorProcessor.onNext(newState)
+            }
+            sideEffects.forEach { it.apply { dispatcher.invoke(action, newState) } }
         }
-        sideEffects.forEach { it.apply { dispatcher.invoke(action, newState) } }
     }
 
-    private fun subscribe() {
-        disposables += actionsFlowableProcessor
-            .let { flowable -> scheduler?.let { flowable.observeOn(it) } ?: flowable }
-            .subscribe(
-                { synchronized(stateLock) { handleAction(it) } },
-                { statesFlowableProcessor.onError(it) }
-            )
-        var disposable: Disposable? = null
-        disposable = Completable
-            .fromCallable {
-                synchronized(stateLock) {
-                    val state = state
-                    initializers.forEach { it.apply { dispatcher.invoke(state) } }
+    private fun logActionEnd() {
+        logger?.apply {
+            invoke("| STATE    NOT CHANGED")
+            invoke("| THREAD   $thread")
+            invoke("|----------")
+        }
+    }
+
+    private fun logActionEnd(state: S) {
+        logger?.apply {
+            invoke("| STATE  < $state")
+            invoke("| THREAD   $thread")
+            invoke("|----------")
+        }
+    }
+
+    private fun logActionStart(action: A, state: S) {
+        logger?.apply {
+            invoke("|----------")
+            invoke("| ACTION > $action")
+            invoke("| STATE  > $state")
+        }
+    }
+
+    private fun logTaskAdd(key: String) {
+        logger?.apply {
+            invoke("|----------")
+            invoke("| TASK   + $key")
+            invoke("| THREAD   $thread")
+            invoke("|----------")
+        }
+    }
+
+    private fun logTaskRemove(key: String) {
+        logger?.apply {
+            invoke("|----------")
+            invoke("| TASK   - $key")
+            invoke("| THREAD   $thread")
+            invoke("|----------")
+        }
+    }
+
+    private fun startIfNeeded() {
+        lock.sync {
+            if (++subscriptions != 1) return@sync
+            dispatcher.apply {
+                publishProcessor
+                    .run { scheduler?.let { scheduler -> observeOn(scheduler) } ?: this }
+                    .doOnNext { handleAction(it) }
+                    .ignoreElements()
+                    .launch()
+                Completable
+                    .fromCallable {
+                        lock.sync {
+                            val state = state
+                            initializers.forEach { it.apply { dispatcher.invoke(state) } }
+                        }
+                    }
+                    .run { scheduler?.let { scheduler -> subscribeOn(scheduler) } ?: this }
+                    .launch()
+            }
+        }
+    }
+
+    private fun stopIfNeeded() {
+        lock.sync {
+            if (--subscriptions != 0) return@sync
+            mutableList.forEach { it.disposeIfNeeded() }
+            mutableList.clear()
+            mutableMap.forEach {
+                logTaskRemove(it.key)
+                it.value.disposeIfNeeded()
+            }
+            mutableMap.clear()
+        }
+    }
+
+    private fun Disposable.disposeIfNeeded() {
+        if (!isDisposed) dispose()
+    }
+
+    private inner class DispatcherImpl : Dispatcher<A> {
+
+        override fun cancel(key: String) {
+            lock.sync {
+                val disposable = mutableMap.remove(key) ?: return@sync
+                logTaskRemove(key)
+                disposable.disposeIfNeeded()
+            }
+        }
+
+        override fun dispatch(action: A) {
+            publishProcessor.onNext(action)
+        }
+
+        override fun Completable.launch(key: String?) {
+            run(key) { action ->
+                return@run subscribe(
+                    { action.run() },
+                    {
+                        action.run()
+                        publishProcessor.onError(it)
+                    }
+                )
+            }
+        }
+
+        override fun Flowable<A>.launch(key: String?) {
+            run(key) { action ->
+                return@run subscribe(
+                    { publishProcessor.onNext(it) },
+                    {
+                        action.run()
+                        publishProcessor.onError(it)
+                    },
+                    { action.run() }
+                )
+            }
+        }
+
+        override fun Maybe<A>.launch(key: String?) {
+            run(key) { action ->
+                return@run subscribe(
+                    {
+                        action.run()
+                        publishProcessor.onNext(it)
+                    },
+                    {
+                        action.run()
+                        publishProcessor.onError(it)
+                    },
+                    { action.run() }
+                )
+            }
+        }
+
+        override fun Observable<A>.launch(key: String?) {
+            run(key) { action ->
+                return@run subscribe(
+                    { publishProcessor.onNext(it) },
+                    {
+                        action.run()
+                        publishProcessor.onError(it)
+                    },
+                    { action.run() }
+                )
+            }
+        }
+
+        override fun Single<A>.launch(key: String?) {
+            run(key) { action ->
+                return@run subscribe(
+                    {
+                        action.run()
+                        publishProcessor.onNext(it)
+                    },
+                    {
+                        action.run()
+                        publishProcessor.onError(it)
+                    }
+                )
+            }
+        }
+
+        private fun run(key: String?, callback: (Action) -> Disposable) {
+            lock.sync {
+                if (key == null) {
+                    var disposable: Disposable? = null
+                    val action = Action { lock.sync { disposable?.apply { mutableList -= this } } }
+                    disposable = callback(action)
+                    if (!disposable.isDisposed) mutableList += disposable
+                } else {
+                    cancel(key)
+                    val action = Action { cancel(key) }
+                    val disposable = callback(action)
+                    if (!disposable.isDisposed) {
+                        logTaskAdd(key)
+                        mutableMap[key] = disposable
+                    }
                 }
             }
-            .let { completable -> scheduler?.let { completable.subscribeOn(it) } ?: completable }
-            .subscribe(
-                { disposable?.apply { disposables -= this } },
-                {
-                    statesFlowableProcessor.onError(it)
-                    disposable?.apply { disposables -= this }
-                }
-            )
-        if (!disposable.isDisposed) disposables += disposable
+        }
+
+    }
+
+    private class Lock {
+
+        fun sync(callback: () -> Unit) {
+            synchronized(this, callback)
+        }
+
     }
 
 }

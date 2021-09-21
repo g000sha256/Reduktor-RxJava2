@@ -10,13 +10,7 @@ interface Dispatcher<A> {
 
     fun cancel(key: String)
 
-    fun cancel(vararg keys: String)
-
     fun dispatch(action: A)
-
-    fun dispatch(vararg actions: A)
-
-    fun dispatch(actions: Iterable<A>)
 
     fun Completable.launch(key: String? = null)
 

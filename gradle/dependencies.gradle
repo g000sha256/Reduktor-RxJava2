@@ -1,5 +1,5 @@
 ext {
-    versionKotlin = "1.5.30"
+    versionKotlin = "1.5.31"
     lib = [
         reactiveStreams: "org.reactivestreams:reactive-streams:1.0.3",
         jetBrains      : [

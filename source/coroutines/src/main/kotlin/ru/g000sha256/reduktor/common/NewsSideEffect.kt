@@ -13,8 +13,8 @@ abstract class NewsSideEffect<A, S, T> : SideEffect<A, S> {
     private val mutableSharedFlow = MutableSharedFlow<T>()
 
     final override fun Dispatcher<A>.invoke(action: A, state: S) {
-        val value = map(action, state) ?: return
-        launch { mutableSharedFlow.emit(value) }
+        val result = map(action, state) ?: return
+        launch { mutableSharedFlow.emit(result) }
     }
 
     protected abstract fun map(action: A, state: S): T?
