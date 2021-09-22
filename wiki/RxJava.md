@@ -1,4 +1,5 @@
-## Добавление зависимости
+# Reduktor for RxJava
+## Setting up the dependency
 ```groovy
 dependencies {
     implementation "com.github.g000sha256:reduktor-rxjava2:21.10.01" // For RxJava 2
