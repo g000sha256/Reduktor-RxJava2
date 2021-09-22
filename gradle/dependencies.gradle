@@ -17,7 +17,7 @@ ext {
     ]
     libTest = [
         jUnit  : "junit:junit:4.13.2",
-        mockito: "org.mockito:mockito-core:3.12.4"
+        mockito: "org.mockito.kotlin:mockito-kotlin:3.2.0"
     ]
     plugin = [
         kotlin: "org.jetbrains.kotlin:kotlin-gradle-plugin:$versionKotlin"
