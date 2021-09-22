@@ -5,6 +5,6 @@ dependencies {
     implementation(lib.jetBrains.coroutines) { transitive false }
 }
 dependencies {
-    testImplementation(libTest.hamcrest) { transitive false }
-    testImplementation(libTest.jUnit) { transitive false }
+    testImplementation libTest.jUnit
+    testImplementation libTest.mockito
 }
