@@ -1,8 +1,8 @@
-[![License](https://img.shields.io/static/v1?color=blue&label=License&message=MIT)](https://github.com/g000sha256/Reduktor-RxJava2/blob/master/License)
-[![JitPack](https://img.shields.io/jitpack/v/github/g000sha256/Reduktor-RxJava2?color=brightgreen&label=Version)](https://jitpack.io/#g000sha256/Reduktor-RxJava2)
-[![Travis](https://img.shields.io/travis/com/g000sha256/Reduktor-RxJava2?label=Build)](https://travis-ci.com/github/g000sha256/Reduktor-RxJava2)
-[![Codacy](https://img.shields.io/codacy/coverage/6a57fe758ddb4cc893550abbaa1cbf38?label=Code%20coverage)](https://www.codacy.com/gh/g000sha256/Reduktor-RxJava2)
-[![Codacy](https://img.shields.io/codacy/grade/6a57fe758ddb4cc893550abbaa1cbf38?label=Code%20quality)](https://www.codacy.com/gh/g000sha256/Reduktor-RxJava2)
+[![License](https://img.shields.io/static/v1?color=blue&label=License&message=MIT)](https://github.com/g000sha256/reduktor/blob/master/License)
+[![JitPack](https://img.shields.io/jitpack/v/github/g000sha256/reduktor?color=brightgreen&label=Version)](https://jitpack.io/#g000sha256/reduktor)
+[![Travis](https://img.shields.io/travis/com/g000sha256/reduktor?label=Build)](https://travis-ci.com/github/g000sha256/reduktor)
+[![Codacy](https://img.shields.io/codacy/coverage/<...>?label=Code%20coverage)](https://www.codacy.com/gh/g000sha256/reduktor)
+[![Codacy](https://img.shields.io/codacy/grade/<...>?label=Code%20quality)](https://www.codacy.com/gh/g000sha256/reduktor)
 
 # Reduktor (WORK IN PROGRESS)
 Библиотека помогает реализовать подход `Unidirectional Data Flow`.
