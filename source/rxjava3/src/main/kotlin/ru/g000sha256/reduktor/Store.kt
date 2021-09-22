@@ -227,11 +227,15 @@ class Store<A, S>(
             }
         }
 
+        private fun clear(disposable: Disposable) {
+            lock.sync { mutableList -= disposable }
+        }
+
         private fun run(key: String?, callback: (Action) -> Disposable) {
             lock.sync {
                 if (key == null) {
                     var disposable: Disposable? = null
-                    val action = Action { lock.sync { disposable?.apply { mutableList -= this } } }
+                    val action = Action { disposable?.apply { clear(this) } }
                     disposable = callback(action)
                     if (!disposable.isDisposed) mutableList += disposable
                 } else {

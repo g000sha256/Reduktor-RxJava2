@@ -167,7 +167,7 @@ class Store<A, S>(
                 if (key == null) {
                     job.invokeOnCompletion {
                         if (it is InternalCancellationException) return@invokeOnCompletion
-                        lock.sync { mutableList -= job }
+                        clear(job)
                     }
                     mutableList += job
                 } else {
@@ -185,6 +185,10 @@ class Store<A, S>(
 
         override fun Flow<A>.launch(context: CoroutineContext?, key: String?) {
             launch(context, key) { collect { dispatch(it) } }
+        }
+
+        private fun clear(job: Job) {
+            lock.sync { mutableList -= job }
         }
 
     }
