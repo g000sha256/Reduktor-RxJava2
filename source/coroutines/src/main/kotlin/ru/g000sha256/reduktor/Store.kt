@@ -65,6 +65,13 @@ class Store<A, S>(
         }
     }
 
+    private fun init() {
+        lock.sync {
+            val state = state
+            initializers.forEach { it.apply { dispatcher.invoke(state) } }
+        }
+    }
+
     private fun logActionEnd() {
         logger?.apply {
             invoke("| STATE    NOT CHANGED")
@@ -113,12 +120,7 @@ class Store<A, S>(
             dispatcher.apply {
                 val coroutineContext = context ?: Dispatchers.Unconfined
                 launch(coroutineContext) { mutableSharedFlow.collect { handleAction(it) } }
-                launch(coroutineContext) {
-                    lock.sync {
-                        val state = state
-                        initializers.forEach { it.apply { dispatcher.invoke(state) } }
-                    }
-                }
+                launch(coroutineContext) { init() }
             }
         }
     }

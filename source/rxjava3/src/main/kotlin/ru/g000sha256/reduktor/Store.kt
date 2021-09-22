@@ -61,6 +61,13 @@ class Store<A, S>(
         }
     }
 
+    private fun init() {
+        lock.sync {
+            val state = state
+            initializers.forEach { it.apply { dispatcher.invoke(state) } }
+        }
+    }
+
     private fun logActionEnd() {
         logger?.apply {
             invoke("| STATE    NOT CHANGED")
@@ -113,12 +120,7 @@ class Store<A, S>(
                     .ignoreElements()
                     .launch()
                 Completable
-                    .fromCallable {
-                        lock.sync {
-                            val state = state
-                            initializers.forEach { it.apply { dispatcher.invoke(state) } }
-                        }
-                    }
+                    .fromCallable { init() }
                     .run { scheduler?.let { scheduler -> subscribeOn(scheduler) } ?: this }
                     .launch()
             }
