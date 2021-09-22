@@ -1,7 +1,5 @@
 package ru.g000sha256.reduktor.common
 
-import org.junit.Test
-
 class NewsSideEffectTest {
 
     /*@Test
