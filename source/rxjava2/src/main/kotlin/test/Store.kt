@@ -24,6 +24,7 @@ class Store<A, S>(
     fun start() {
         synchronized(lock) {
             if (isInitialized) return@synchronized
+            isInitialized = true
             logger.log("|----------")
             logger.log("| INIT   : START")
             logger.log("| THREAD : $thread")
@@ -31,9 +32,9 @@ class Store<A, S>(
             sideEffects.forEach {
                 val state = state
                 it.apply { dispatcher.onInit(state) }
+                if (!isInitialized) return@synchronized
             }
             onNewStateCallback.invoke(state)
-            isInitialized = true
         }
     }
 
@@ -51,6 +52,7 @@ class Store<A, S>(
 
     private fun handleAction(action: A) {
         synchronized(lock) {
+            if (!isInitialized) return@synchronized
             val oldState = state
             logger.log("|----------")
             logger.log("| ACTION > $action")
@@ -67,7 +69,10 @@ class Store<A, S>(
                 logger.log("|----------")
                 onNewStateCallback.invoke(newState)
             }
-            sideEffects.forEach { it.apply { dispatcher.onNewAction(action, newState) } }
+            sideEffects.forEach {
+                it.apply { dispatcher.onNewAction(action, newState) }
+                if (!isInitialized) return@synchronized
+            }
         }
     }
 
