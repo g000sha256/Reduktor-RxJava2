@@ -1,4 +1,4 @@
-package test
+package test1
 
 class Store<A, S>(
     initialState: S,
