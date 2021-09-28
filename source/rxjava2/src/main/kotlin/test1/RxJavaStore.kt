@@ -19,7 +19,7 @@ class RxJavaStore<A, S>(
     private val store = Store(initialState, reducer, sideEffects, logger)
 
     init {
-        val behaviorProcessor = BehaviorProcessor.create<S>()
+        val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
         states = behaviorProcessor
         store.onNewStateCallback = { behaviorProcessor.onNext(it) }
     }
