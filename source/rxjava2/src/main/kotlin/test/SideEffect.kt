@@ -1,8 +1,4 @@
-package test2
-
-import test.Dispatcher
-import test.StateAccessor
-import test.TaskCleaner
+package test
 
 fun interface SideEffect<A, S> {
 

@@ -1,6 +1,4 @@
-package test1
-
-import test.Dispatcher
+package test
 
 fun interface Initializer<A, S> {
 
