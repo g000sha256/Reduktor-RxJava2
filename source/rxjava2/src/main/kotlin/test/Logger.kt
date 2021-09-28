@@ -2,6 +2,6 @@ package test
 
 fun interface Logger {
 
-    fun log(message: String)
+    fun invoke(message: String)
 
 }

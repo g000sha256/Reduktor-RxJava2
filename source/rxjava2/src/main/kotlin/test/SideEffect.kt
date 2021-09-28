@@ -1,11 +1,16 @@
 package test
 
-interface SideEffect<A, S> {
+fun interface SideEffect<A, S> {
 
-    fun Dispatcher<A>.onInit(initialState: S) {}
+    fun Context<A, S>.invoke(newAction: A)
 
-    fun Dispatcher<A>.onNewAction(action: A, currentState: S) {}
+    interface Context<A, S> {
 
-    fun onCleared() {}
+        val dispatcher: Dispatcher<A>
+        val stateAccessor: StateAccessor<S>
+        val taskCleaner: TaskCleaner
+        val taskCreator: TaskCreator
+
+    }
 
 }

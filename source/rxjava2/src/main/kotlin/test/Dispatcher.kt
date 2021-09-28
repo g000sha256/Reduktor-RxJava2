@@ -1,6 +1,6 @@
 package test
 
-fun interface Dispatcher<A> {
+interface Dispatcher<A> {
 
     fun dispatch(action: A)
 
