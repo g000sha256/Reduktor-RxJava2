@@ -1,5 +1,9 @@
 package test1
 
+import test.Logger
+import test.Reducer
+import test.SideEffect
+
 class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
