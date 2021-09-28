@@ -5,6 +5,7 @@ import io.reactivex.processors.BehaviorProcessor
 import test.Logger
 import test.Reducer
 import test.SideEffect
+import test.Store
 
 class RxJavaStore<A, S>(
     initialState: S,

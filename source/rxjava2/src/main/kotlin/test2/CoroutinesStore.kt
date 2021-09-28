@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import test.Logger
 import test.Reducer
 import test.SideEffect
-import test1.Store
+import test.Store
 
 class CoroutinesStore<A, S>(
     initialState: S,

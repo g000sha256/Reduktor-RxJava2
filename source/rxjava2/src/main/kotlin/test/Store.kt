@@ -1,8 +1,4 @@
-package test1
-
-import test.Logger
-import test.Reducer
-import test.SideEffect
+package test
 
 class Store<A, S>(
     initialState: S,
