@@ -3,6 +3,7 @@ package test
 class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
+    private val initializers: List<Initializer<A, S>> = emptyList(),
     private val sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
     private val logger: Logger = Logger {}
 ) {
@@ -25,13 +26,13 @@ class Store<A, S>(
         synchronized(lock) {
             if (isInitialized) return@synchronized
             isInitialized = true
-            logger.log("|----------")
-            logger.log("| INIT   : START")
-            logger.log("| THREAD : $thread")
-            logger.log("|----------")
-            sideEffects.forEach {
+            logger.invoke("|----------")
+            logger.invoke("| INIT   : START")
+            logger.invoke("| THREAD : $thread")
+            logger.invoke("|----------")
+            initializers.forEach {
                 val state = state
-                it.apply { dispatcher.onInit(state) }
+                it.apply { dispatcher.invoke(state) }
                 if (!isInitialized) return@synchronized
             }
             onNewStateCallback.invoke(state)
@@ -43,10 +44,10 @@ class Store<A, S>(
             if (!isInitialized) return@synchronized
             sideEffects.forEach { it.onCleared() }
             isInitialized = false
-            logger.log("|----------")
-            logger.log("| INIT   : STOP")
-            logger.log("| THREAD : $thread")
-            logger.log("|----------")
+            logger.invoke("|----------")
+            logger.invoke("| INIT   : STOP")
+            logger.invoke("| THREAD : $thread")
+            logger.invoke("|----------")
         }
     }
 
@@ -54,19 +55,19 @@ class Store<A, S>(
         synchronized(lock) {
             if (!isInitialized) return@synchronized
             val oldState = state
-            logger.log("|----------")
-            logger.log("| ACTION > $action")
-            logger.log("| STATE  > $oldState")
-            val newState = reducer.reduce(action, oldState)
+            logger.invoke("|----------")
+            logger.invoke("| ACTION > $action")
+            logger.invoke("| STATE  > $oldState")
+            val newState = reducer.invoke(action, oldState)
             if (newState == oldState) {
-                logger.log("| STATE  : NOT CHANGED")
-                logger.log("| THREAD : $thread")
-                logger.log("|----------")
+                logger.invoke("| STATE  : NOT CHANGED")
+                logger.invoke("| THREAD : $thread")
+                logger.invoke("|----------")
             } else {
                 state = newState
-                logger.log("| STATE  < $newState")
-                logger.log("| THREAD : $thread")
-                logger.log("|----------")
+                logger.invoke("| STATE  < $newState")
+                logger.invoke("| THREAD : $thread")
+                logger.invoke("|----------")
                 onNewStateCallback.invoke(newState)
             }
             sideEffects.forEach {
