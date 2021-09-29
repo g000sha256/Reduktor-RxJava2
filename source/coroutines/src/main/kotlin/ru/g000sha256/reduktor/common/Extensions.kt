@@ -1,14 +1,12 @@
 package ru.g000sha256.reduktor.common
 
-import kotlinx.coroutines.CoroutineScope
-
-inline fun <A, S, reified T> createNewsSideEffect(coroutineScope: CoroutineScope): NewsSideEffect<A, S, T> {
+inline fun <A, S, reified T> createNewsSideEffect(): NewsSideEffect<A, S, T> {
     val clazz = T::class.java
-    return createNewsSideEffect(coroutineScope, clazz)
+    return createNewsSideEffect(clazz)
 }
 
-fun <A, S, T> createNewsSideEffect(coroutineScope: CoroutineScope, clazz: Class<T>): NewsSideEffect<A, S, T> {
-    return object : NewsSideEffect<A, S, T>(coroutineScope) {
+fun <A, S, T> createNewsSideEffect(clazz: Class<T>): NewsSideEffect<A, S, T> {
+    return object : NewsSideEffect<A, S, T>() {
 
         override fun map(action: A, state: S): T? {
             val isInstance = clazz.isInstance(action)
@@ -19,11 +17,8 @@ fun <A, S, T> createNewsSideEffect(coroutineScope: CoroutineScope, clazz: Class<
     }
 }
 
-fun <A, S, T> createNewsSideEffect(
-    coroutineScope: CoroutineScope,
-    callback: (action: A, state: S) -> T?
-): NewsSideEffect<A, S, T> {
-    return object : NewsSideEffect<A, S, T>(coroutineScope) {
+fun <A, S, T> createNewsSideEffect(callback: (action: A, state: S) -> T?): NewsSideEffect<A, S, T> {
+    return object : NewsSideEffect<A, S, T>() {
 
         override fun map(action: A, state: S): T? {
             return callback(action, state)

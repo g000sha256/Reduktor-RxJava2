@@ -1,13 +1,12 @@
 package ru.g000sha256.reduktor
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 
 object Action
 
 private object State
 
-private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideEffect<Action, State> {
+private class SideEffectImpl : SideEffect<Action, State> {
 
     override fun SideEffect.Context<Action>.invoke(action: Action, state: State) {
         // Отправка новых Action
@@ -23,11 +22,11 @@ private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideE
         tasks cancel "task_1"
 
         // Создание задачи
-        tasks += coroutineScope.task {
+        tasks += unconfinedTask {
             delay(500L)
             sender send Action
         }
-        tasks["task_1"] = coroutineScope.task {
+        tasks["task_1"] = unconfinedTask {
             delay(500L)
             sender send Action
         }
