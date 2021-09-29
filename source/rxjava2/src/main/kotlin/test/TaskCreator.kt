@@ -4,7 +4,9 @@ import io.reactivex.disposables.Disposable
 
 interface TaskCreator {
 
-    fun create(key: String? = null, creator: Creator)
+    fun create(creator: Creator)
+
+    fun create(key: String, creator: Creator)
 
     fun interface Creator {
 

@@ -10,26 +10,39 @@ private class SideEffectImpl : SideEffect<Action, State> {
 
     override fun SideEffect.Context<Action, State>.invoke(newAction: Action) {
         // Получаем текущее актуальное состояние
-        val state = currentState
+        val state = stateAccessor.currentState
 
         // Отправка новых Action
-        dispatch(Action)
-        dispatch(Action, Action, Action)
-        dispatch(listOf(Action, Action, Action))
+        dispatcher.send(Action)
+        dispatcher.send(Action, Action, Action)
+        dispatcher.send(listOf(Action, Action, Action))
+        dispatcher send Action
+        dispatcher send listOf(Action, Action, Action)
 
         // Отмена задачи
-        cancel(key = "task_1")
+        taskCleaner.cancel(key = "task_1")
+        taskCleaner cancel "task_1"
 
         // Создание задачи
-        create {
+        taskCreator.create {
             return@create Flowable
                 .just(Action)
-                .subscribe(::dispatch)
+                .subscribe(dispatcher::send)
         }
-        create(key = "task_1") {
+        taskCreator.create(key = "task_1") {
             return@create Flowable
                 .just(Action)
-                .subscribe(::dispatch)
+                .subscribe(dispatcher::send)
+        }
+        taskCreator += TaskCreator.Creator {
+            return@Creator Flowable
+                .just(Action)
+                .subscribe(dispatcher::send)
+        }
+        taskCreator["task_1"] = TaskCreator.Creator {
+            return@Creator Flowable
+                .just(Action)
+                .subscribe(dispatcher::send)
         }
     }
 

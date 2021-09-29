@@ -2,10 +2,10 @@ package test
 
 interface Dispatcher<A> {
 
-    fun dispatch(action: A)
+    fun send(action: A)
 
-    fun dispatch(vararg actions: A)
+    fun send(vararg actions: A)
 
-    fun dispatch(actions: Iterable<A>)
+    fun send(actions: Iterable<A>)
 
 }
