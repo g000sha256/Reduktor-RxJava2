@@ -1,7 +1,6 @@
 package test
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 fun interface Initializer<A, S> {
 
@@ -10,14 +9,15 @@ fun interface Initializer<A, S> {
     interface Context<A> {
 
         val actions: Actions<A>
-        val scope: CoroutineScope
-        val jobs: Jobs
+        val tasks: Tasks
 
-        interface Jobs {
+        fun task(callback: suspend CoroutineScope.() -> Unit): Task
 
-            operator fun plusAssign(job: Job)
+        interface Tasks {
 
-            operator fun set(key: String, job: Job)
+            operator fun plusAssign(task: Task)
+
+            operator fun set(key: String, task: Task)
 
         }
 

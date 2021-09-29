@@ -1,6 +1,6 @@
 package test
 
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 object Action
 
@@ -18,12 +18,18 @@ private class SideEffectImpl : SideEffect<Action, State> {
         actions send listOf(Action, Action, Action)
 
         // Отмена задачи
-        jobs.cancel(key = "task_1")
-        jobs cancel "task_1"
+        tasks.cancel(key = "task_1")
+        tasks cancel "task_1"
 
         // Создание задачи
-        jobs += scope.launch { actions send Action }
-        jobs["task_1"] = scope.launch { actions send Action }
+        tasks += task {
+            delay(500L)
+            actions send Action
+        }
+        tasks["task_1"] = task {
+            delay(500L)
+            actions send Action
+        }
     }
 
 }

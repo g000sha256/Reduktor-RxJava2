@@ -1,7 +1,6 @@
 package test
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 
 fun interface SideEffect<A, S> {
 
@@ -10,16 +9,17 @@ fun interface SideEffect<A, S> {
     interface Context<A> {
 
         val actions: Actions<A>
-        val scope: CoroutineScope
-        val jobs: Jobs
+        val tasks: Tasks
 
-        interface Jobs {
+        fun task(callback: suspend CoroutineScope.() -> Unit): Task
+
+        interface Tasks {
 
             fun cancel(key: String)
 
-            operator fun plusAssign(job: Job)
+            operator fun plusAssign(task: Task)
 
-            operator fun set(key: String, job: Job)
+            operator fun set(key: String, task: Task)
 
         }
 
