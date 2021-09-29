@@ -1,6 +1,11 @@
-package ru.g000sha256.reduktor.common
+package ru.g000sha256.reduktor
 
-fun <A, S, T> NewsSideEffect(clazz: Class<T>): NewsSideEffect<A, S, T> {
+inline fun <A, S, reified T> createNewsSideEffect(): NewsSideEffect<A, S, T> {
+    val clazz = T::class.java
+    return createNewsSideEffect(clazz)
+}
+
+fun <A, S, T> createNewsSideEffect(clazz: Class<T>): NewsSideEffect<A, S, T> {
     return object : NewsSideEffect<A, S, T>() {
 
         override fun map(action: A, state: S): T? {
@@ -12,7 +17,7 @@ fun <A, S, T> NewsSideEffect(clazz: Class<T>): NewsSideEffect<A, S, T> {
     }
 }
 
-fun <A, S, T> NewsSideEffect(callback: (action: A, state: S) -> T?): NewsSideEffect<A, S, T> {
+fun <A, S, T> createNewsSideEffect(callback: (action: A, state: S) -> T?): NewsSideEffect<A, S, T> {
     return object : NewsSideEffect<A, S, T>() {
 
         override fun map(action: A, state: S): T? {
