@@ -1,9 +1,11 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.common
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import ru.g000sha256.reduktor.Initializer
+import ru.g000sha256.reduktor.task
 
 class ActionsInitializer<A, S>(
     private val coroutineScope: CoroutineScope,

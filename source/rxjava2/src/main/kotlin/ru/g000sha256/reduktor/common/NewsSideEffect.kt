@@ -1,7 +1,8 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.common
 
 import io.reactivex.Flowable
 import io.reactivex.processors.PublishProcessor
+import ru.g000sha256.reduktor.SideEffect
 
 abstract class NewsSideEffect<A, S, T> : SideEffect<A, S> {
 

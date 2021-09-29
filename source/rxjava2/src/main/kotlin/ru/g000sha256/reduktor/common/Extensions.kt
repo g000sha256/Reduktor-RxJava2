@@ -1,4 +1,4 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.common
 
 inline fun <A, S, reified T> createNewsSideEffect(): NewsSideEffect<A, S, T> {
     val clazz = T::class.java
