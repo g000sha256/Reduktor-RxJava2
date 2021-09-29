@@ -1,6 +1,9 @@
 package ru.g000sha256.reduktor
 
-abstract class Store<A, S>(
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+
+class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
     private val initializers: Iterable<Initializer<A, S>> = emptyList(),
@@ -8,7 +11,13 @@ abstract class Store<A, S>(
     private val logger: Logger = Logger {}
 ) {
 
-    protected abstract fun onNewState(state: S)
+    val states: Flow<S>
+
+    private val mutableStatFlow = MutableStateFlow(initialState)
+
+    init {
+        states = mutableStatFlow
+    }
 
     fun start() {
         // ToDo
