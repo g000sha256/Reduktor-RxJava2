@@ -1,8 +1,8 @@
-package test
+package ru.g000sha256.reduktor
 
-fun interface Initializer<A, S> {
+fun interface SideEffect<A, S> {
 
-    fun Context<A>.invoke(initialState: S)
+    fun Context<A>.invoke(action: A, state: S)
 
     interface Context<A> {
 
@@ -10,6 +10,8 @@ fun interface Initializer<A, S> {
         val tasks: Tasks
 
         interface Tasks {
+
+            fun cancel(key: String)
 
             operator fun plusAssign(task: Task)
 

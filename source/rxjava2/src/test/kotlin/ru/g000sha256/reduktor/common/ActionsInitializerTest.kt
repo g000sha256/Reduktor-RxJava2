@@ -5,7 +5,6 @@ import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
-import ru.g000sha256.reduktor.Dispatcher
 
 class ActionsInitializerTest {
 

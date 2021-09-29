@@ -1,7 +1,14 @@
 package test
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import ru.g000sha256.reduktor.SideEffect
+import ru.g000sha256.reduktor.Task
+import ru.g000sha256.reduktor.cancel
+import ru.g000sha256.reduktor.send
 
 object Action
 
@@ -35,6 +42,7 @@ private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideE
 
 }
 
-fun CoroutineScope.task(callback: suspend CoroutineScope.() -> Unit): Task {
-
+fun CoroutineScope.task(block: suspend CoroutineScope.() -> Unit): Task {
+    val coroutineContext = coroutineContext
+    val job = launch(Dispatchers.Unconfined, CoroutineStart.LAZY) { launch(coroutineContext, block = block) }
 }

@@ -2,6 +2,10 @@ package test
 
 import io.reactivex.Flowable
 import io.reactivex.disposables.Disposable
+import ru.g000sha256.reduktor.SideEffect
+import ru.g000sha256.reduktor.Task
+import ru.g000sha256.reduktor.cancel
+import ru.g000sha256.reduktor.send
 
 object Action
 

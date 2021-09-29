@@ -1,4 +1,4 @@
-package test
+package ru.g000sha256.reduktor
 
 infix fun <A> Actions<A>.send(action: A) {
     send(action)
