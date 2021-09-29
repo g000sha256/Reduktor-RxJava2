@@ -1,7 +1,5 @@
 package test
 
-import kotlinx.coroutines.CoroutineScope
-
 fun interface SideEffect<A, S> {
 
     fun Context<A>.invoke(action: A, state: S)
@@ -10,8 +8,6 @@ fun interface SideEffect<A, S> {
 
         val actions: Actions<A>
         val tasks: Tasks
-
-        fun task(callback: suspend CoroutineScope.() -> Unit): Task
 
         interface Tasks {
 

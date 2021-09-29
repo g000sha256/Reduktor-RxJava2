@@ -1,5 +1,5 @@
 package test
 
-infix fun SideEffect.Context.Jobs.cancel(key: String) {
+infix fun SideEffect.Context.Tasks.cancel(key: String) {
     cancel(key)
 }

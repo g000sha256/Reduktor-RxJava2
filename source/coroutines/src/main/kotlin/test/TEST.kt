@@ -1,12 +1,13 @@
 package test
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 
 object Action
 
 private object State
 
-private class SideEffectImpl : SideEffect<Action, State> {
+private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideEffect<Action, State> {
 
     override fun SideEffect.Context<Action>.invoke(action: Action, state: State) {
         // Отправка новых Action
@@ -22,14 +23,18 @@ private class SideEffectImpl : SideEffect<Action, State> {
         tasks cancel "task_1"
 
         // Создание задачи
-        tasks += task {
+        tasks += coroutineScope.task {
             delay(500L)
             actions send Action
         }
-        tasks["task_1"] = task {
+        tasks["task_1"] = coroutineScope.task {
             delay(500L)
             actions send Action
         }
     }
+
+}
+
+fun CoroutineScope.task(callback: suspend CoroutineScope.() -> Unit): Task {
 
 }

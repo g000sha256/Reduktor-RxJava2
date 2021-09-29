@@ -1,17 +1,20 @@
 package test
 
+import io.reactivex.Flowable
+import io.reactivex.processors.BehaviorProcessor
+
 class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
-    private val initializers: List<Initializer<A, S>> = emptyList(),
+    private val initializers: Iterable<Initializer<A, S>> = emptyList(),
     private val sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
     private val logger: Logger = Logger {}
 ) {
 
-    var onNewStateCallback: (state: S) -> Unit = {}
+    val states: Flowable<S>
 
     private val lock = Any()
-    private val dispatcher = Dispatcher<A> { handleAction(it) }
+    private val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
 
     private val thread: String
         get() {
@@ -19,62 +22,75 @@ class Store<A, S>(
             return thread.name
         }
 
-    private var isInitialized = false
+    private var init = Init.NONE
     private var state = initialState
+
+    init {
+        states = behaviorProcessor.onBackpressureLatest()
+    }
 
     fun start() {
         synchronized(lock) {
-            if (isInitialized) return@synchronized
-            isInitialized = true
-            logger.invoke("|----------")
-            logger.invoke("| INIT   : START")
-            logger.invoke("| THREAD : $thread")
-            logger.invoke("|----------")
+            if (init == Init.STOP_BEGIN) throw IllegalStateException() // ToDo
+            if (init == Init.START_BEGIN) return@synchronized
+            if (init == Init.START_END) return@synchronized
+            init = Init.START_BEGIN
+            logger.invoke("INIT     START")
+            logger.invoke("THREAD   $thread")
             initializers.forEach {
                 val state = state
                 it.apply { dispatcher.invoke(state) }
-                if (!isInitialized) return@synchronized
             }
-            onNewStateCallback.invoke(state)
+            init = Init.START_END
         }
     }
 
     fun stop() {
         synchronized(lock) {
-            if (!isInitialized) return@synchronized
+            if (init == Init.START_BEGIN) throw IllegalStateException() // ToDo
+            if (init == Init.NONE) return@synchronized
+            if (init == Init.STOP_BEGIN) return@synchronized
+            if (init == Init.STOP_END) return@synchronized
+            init = Init.STOP_BEGIN
             sideEffects.forEach { it.onCleared() }
-            isInitialized = false
-            logger.invoke("|----------")
-            logger.invoke("| INIT   : STOP")
-            logger.invoke("| THREAD : $thread")
-            logger.invoke("|----------")
+            logger.invoke("---------")
+            logger.invoke("INIT     STOP")
+            logger.invoke("THREAD   $thread")
+            init = Init.STOP_END
         }
     }
 
     private fun handleAction(action: A) {
         synchronized(lock) {
-            if (!isInitialized) return@synchronized
             val oldState = state
-            logger.invoke("|----------")
-            logger.invoke("| ACTION > $action")
-            logger.invoke("| STATE  > $oldState")
-            val newState = reducer.invoke(action, oldState)
+            logger.invoke("---------")
+            logger.invoke("ACTION > $action")
+            logger.invoke("STATE  > $oldState")
+            val newState = reducer.run { oldState.invoke(action) }
             if (newState == oldState) {
-                logger.invoke("| STATE  : NOT CHANGED")
-                logger.invoke("| THREAD : $thread")
-                logger.invoke("|----------")
+                logger.invoke("STATE    NOT CHANGED")
+                logger.invoke("THREAD   $thread")
             } else {
                 state = newState
-                logger.invoke("| STATE  < $newState")
-                logger.invoke("| THREAD : $thread")
-                logger.invoke("|----------")
-                onNewStateCallback.invoke(newState)
+                logger.invoke("STATE  < $newState")
+                logger.invoke("THREAD   $thread")
+                behaviorProcessor.onNext(newState)
             }
             sideEffects.forEach {
                 it.apply { dispatcher.onNewAction(action, newState) }
                 if (!isInitialized) return@synchronized
             }
         }
+    }
+
+    private enum class Init {
+
+        NONE,
+        START_BEGIN,
+        START_END,
+        STOP_BEGIN,
+        STOP_END
+
     }
 
 }
