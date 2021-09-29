@@ -10,39 +10,45 @@ private class SideEffectImpl : SideEffect<Action, State> {
 
     override fun SideEffect.Context<Action, State>.invoke(newAction: Action) {
         // Получаем текущее актуальное состояние
-        val state = stateAccessor.currentState
+        val state = currentState
 
         // Отправка новых Action
-        dispatcher.send(Action)
-        dispatcher.send(Action, Action, Action)
-        dispatcher.send(listOf(Action, Action, Action))
-        dispatcher send Action
-        dispatcher send listOf(Action, Action, Action)
+        actions.send(Action)
+        actions.send(Action, Action, Action)
+        actions.send(listOf(Action, Action, Action))
+        actions send Action
+        actions send listOf(Action, Action, Action)
+        actions + Action
+        actions + listOf(Action, Action, Action)
+        actions += Action
+        actions += listOf(Action, Action, Action)
 
         // Отмена задачи
-        taskCleaner.cancel(key = "task_1")
-        taskCleaner cancel "task_1"
+        jobs.cancel(key = "task_1")
+        jobs cancel "task_1"
+        jobs - "task_1"
+        jobs -= "task_1"
 
         // Создание задачи
-        taskCreator.create {
+        jobs.create {
             return@create Flowable
                 .just(Action)
-                .subscribe(dispatcher::send)
+                .subscribe(actions::send)
         }
-        taskCreator.create(key = "task_1") {
+        jobs.create(key = "task_1") {
             return@create Flowable
                 .just(Action)
-                .subscribe(dispatcher::send)
+                .subscribe(actions::send)
         }
-        taskCreator += TaskCreator.Creator {
+        jobs += TaskCreator.Creator {
             return@Creator Flowable
                 .just(Action)
-                .subscribe(dispatcher::send)
+                .subscribe(actions::send)
         }
-        taskCreator["task_1"] = TaskCreator.Creator {
+        jobs["task_1"] = TaskCreator.Creator {
             return@Creator Flowable
                 .just(Action)
-                .subscribe(dispatcher::send)
+                .subscribe(actions::send)
         }
     }
 

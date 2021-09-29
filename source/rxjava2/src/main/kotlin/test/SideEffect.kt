@@ -4,12 +4,12 @@ fun interface SideEffect<A, S> {
 
     fun Context<A, S>.invoke(newAction: A)
 
-    interface Context<A, S> {
+    interface Context<A, S> : StateAccessor<S> {
 
-        val dispatcher: Dispatcher<A>
-        val stateAccessor: StateAccessor<S>
-        val taskCleaner: TaskCleaner
-        val taskCreator: TaskCreator
+        val actions: Actions<A>
+        val jobs: Jobs
+
+        interface Jobs : TaskCleaner, TaskCreator
 
     }
 

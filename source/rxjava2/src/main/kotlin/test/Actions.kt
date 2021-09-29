@@ -1,6 +1,6 @@
 package test
 
-interface Dispatcher<A> {
+interface Actions<A> {
 
     fun send(action: A)
 

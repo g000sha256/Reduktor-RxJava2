@@ -6,8 +6,10 @@ fun interface Initializer<A, S> {
 
     interface Context<A> {
 
-        val dispatcher: Dispatcher<A>
-        val taskCreator: TaskCreator
+        val actions: Actions<A>
+        val jobs: Jobs
+
+        interface Jobs : TaskCreator
 
     }
 
