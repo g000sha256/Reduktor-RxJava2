@@ -1,14 +1,14 @@
 package test
 
+import io.reactivex.disposables.Disposable
+
 interface TaskCreator {
 
-    operator fun plusAssign(creator: Creator)
-
-    operator fun set(key: String, creator: Creator)
+    fun create(key: String? = null, creator: Creator)
 
     fun interface Creator {
 
-        fun invoke(): Task
+        fun invoke(): Disposable
 
     }
 
