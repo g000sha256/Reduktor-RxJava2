@@ -1,6 +1,6 @@
 package ru.g000sha256.reduktor
 
-interface Actions<A> {
+interface Sender<A> {
 
     fun send(action: A)
 

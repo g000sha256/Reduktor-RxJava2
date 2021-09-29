@@ -13,8 +13,7 @@ class ActionsInitializer<A, S>(
 ) : Initializer<A, S> {
 
     override fun Initializer.Context<A>.invoke(initialState: S) {
-        val flow = this@ActionsInitializer.actions
-        tasks += coroutineScope.task(Dispatchers.Unconfined) { flow.collect(actions::send) }
+        tasks += coroutineScope.task(Dispatchers.Unconfined) { actions.collect(sender::send) }
     }
 
 }

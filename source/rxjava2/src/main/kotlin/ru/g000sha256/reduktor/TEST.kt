@@ -10,12 +10,12 @@ private class SideEffectImpl : SideEffect<Action, State> {
 
     override fun SideEffect.Context<Action>.invoke(action: Action, state: State) {
         // Отправка новых Action
-        actions.send(Action)
-        actions.send(Action, Action, Action)
-        actions.send(listOf(Action, Action, Action))
-        actions send Action
-        actions send arrayOf(Action, Action, Action)
-        actions send listOf(Action, Action, Action)
+        sender.send(Action)
+        sender.send(Action, Action, Action)
+        sender.send(listOf(Action, Action, Action))
+        sender send Action
+        sender send arrayOf(Action, Action, Action)
+        sender send listOf(Action, Action, Action)
 
         // Отмена задачи
         tasks.cancel(key = "task_1")
@@ -24,10 +24,10 @@ private class SideEffectImpl : SideEffect<Action, State> {
         // Создание задачи
         tasks += Flowable
             .just(Action)
-            .toTask(actions::send)
+            .toTask(sender::send)
         tasks["task_1"] = Flowable
             .just(Action)
-            .toTask(actions::send)
+            .toTask(sender::send)
     }
 
 }

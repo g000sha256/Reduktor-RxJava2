@@ -11,12 +11,12 @@ private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideE
 
     override fun SideEffect.Context<Action>.invoke(action: Action, state: State) {
         // Отправка новых Action
-        actions.send(Action)
-        actions.send(Action, Action, Action)
-        actions.send(listOf(Action, Action, Action))
-        actions send Action
-        actions send arrayOf(Action, Action, Action)
-        actions send listOf(Action, Action, Action)
+        sender.send(Action)
+        sender.send(Action, Action, Action)
+        sender.send(listOf(Action, Action, Action))
+        sender send Action
+        sender send arrayOf(Action, Action, Action)
+        sender send listOf(Action, Action, Action)
 
         // Отмена задачи
         tasks.cancel(key = "task_1")
@@ -25,11 +25,11 @@ private class SideEffectImpl(private val coroutineScope: CoroutineScope) : SideE
         // Создание задачи
         tasks += coroutineScope.task {
             delay(500L)
-            actions send Action
+            sender send Action
         }
         tasks["task_1"] = coroutineScope.task {
             delay(500L)
-            actions send Action
+            sender send Action
         }
     }
 
