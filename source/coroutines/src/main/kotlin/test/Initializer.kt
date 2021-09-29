@@ -1,6 +1,7 @@
 package test
 
-import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 
 fun interface Initializer<A, S> {
 
@@ -9,13 +10,14 @@ fun interface Initializer<A, S> {
     interface Context<A> {
 
         val actions: Actions<A>
+        val scope: CoroutineScope
         val jobs: Jobs
 
         interface Jobs {
 
-            operator fun plusAssign(disposable: Disposable)
+            operator fun plusAssign(job: Job)
 
-            operator fun set(key: String, disposable: Disposable)
+            operator fun set(key: String, job: Job)
 
         }
 

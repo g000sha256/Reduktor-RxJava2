@@ -1,6 +1,6 @@
 package test
 
-import io.reactivex.Single
+import kotlinx.coroutines.launch
 
 object Action
 
@@ -22,12 +22,8 @@ private class SideEffectImpl : SideEffect<Action, State> {
         jobs cancel "task_1"
 
         // Создание задачи
-        jobs += Single
-            .just(Action)
-            .subscribe(actions::send)
-        jobs["task_1"] = Single
-            .just(Action)
-            .subscribe(actions::send)
+        jobs += scope.launch { actions send Action }
+        jobs["task_1"] = scope.launch { actions send Action }
     }
 
 }
