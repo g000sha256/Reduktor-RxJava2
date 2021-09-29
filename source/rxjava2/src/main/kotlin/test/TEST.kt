@@ -1,6 +1,7 @@
 package test
 
-import io.reactivex.Single
+import io.reactivex.Flowable
+import io.reactivex.disposables.Disposable
 
 object Action
 
@@ -18,16 +19,54 @@ private class SideEffectImpl : SideEffect<Action, State> {
         actions send listOf(Action, Action, Action)
 
         // Отмена задачи
-        jobs.cancel(key = "task_1")
-        jobs cancel "task_1"
+        tasks.cancel(key = "task_1")
+        tasks cancel "task_1"
 
         // Создание задачи
-        jobs += Single
+        tasks += Flowable
             .just(Action)
-            .subscribe(actions::send)
-        jobs["task_1"] = Single
+            .toTask(actions::send)
+        tasks["task_1"] = Flowable
             .just(Action)
-            .subscribe(actions::send)
+            .toTask(actions::send)
     }
 
+}
+
+fun <A> Flowable<A>.toTask(
+    onNext: (action: A) -> Unit = {},
+    onError: (throwable: Throwable) -> Unit = {},
+    onComplete: () -> Unit = {}
+): Task {
+    val flowable = this
+    return object : Task {
+
+        override val isCompleted: Boolean
+            get() = _isCompleted
+
+        private val lock = Any()
+
+        private var _isCompleted = false
+        private var disposable: Disposable? = null
+
+        override fun cancel() {
+            synchronized(lock) {
+                disposable?.dispose()
+                disposable = null
+            }
+        }
+
+        override fun start() {
+            synchronized(lock) {
+                if (disposable == null) {
+                    disposable = flowable
+                        .doOnCancel { }
+                        .doOnComplete { }
+                        .doOnError { }
+                        .subscribe(onNext, onError, onComplete)
+                }
+            }
+        }
+
+    }
 }

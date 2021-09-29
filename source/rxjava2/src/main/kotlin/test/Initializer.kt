@@ -1,7 +1,5 @@
 package test
 
-import io.reactivex.disposables.Disposable
-
 fun interface Initializer<A, S> {
 
     fun Context<A>.invoke(initialState: S)
@@ -9,13 +7,13 @@ fun interface Initializer<A, S> {
     interface Context<A> {
 
         val actions: Actions<A>
-        val jobs: Jobs
+        val tasks: Tasks
 
-        interface Jobs {
+        interface Tasks {
 
-            operator fun plusAssign(disposable: Disposable)
+            operator fun plusAssign(task: Task)
 
-            operator fun set(key: String, disposable: Disposable)
+            operator fun set(key: String, task: Task)
 
         }
 

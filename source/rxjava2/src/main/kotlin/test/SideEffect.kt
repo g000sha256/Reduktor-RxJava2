@@ -1,7 +1,5 @@
 package test
 
-import io.reactivex.disposables.Disposable
-
 fun interface SideEffect<A, S> {
 
     fun Context<A>.invoke(action: A, state: S)
@@ -9,15 +7,15 @@ fun interface SideEffect<A, S> {
     interface Context<A> {
 
         val actions: Actions<A>
-        val jobs: Jobs
+        val tasks: Tasks
 
-        interface Jobs {
+        interface Tasks {
 
             fun cancel(key: String)
 
-            operator fun plusAssign(disposable: Disposable)
+            operator fun plusAssign(task: Task)
 
-            operator fun set(key: String, disposable: Disposable)
+            operator fun set(key: String, task: Task)
 
         }
 
