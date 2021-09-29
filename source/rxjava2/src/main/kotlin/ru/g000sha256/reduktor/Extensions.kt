@@ -1,42 +1,17 @@
 package ru.g000sha256.reduktor
 
-import io.reactivex.Flowable
-import io.reactivex.disposables.Disposable
+infix fun <A> Sender<A>.send(action: A) {
+    send(action)
+}
 
-fun <A> Flowable<A>.toTask(
-    onNext: (action: A) -> Unit = {},
-    onError: (throwable: Throwable) -> Unit = {},
-    onComplete: () -> Unit = {}
-): Task {
-    val flowable = this
-    return object : Task {
+infix fun <A> Sender<A>.send(actions: Array<A>) {
+    send(*actions)
+}
 
-        override val isCompleted: Boolean
-            get() = _isCompleted
+infix fun <A> Sender<A>.send(actions: Iterable<A>) {
+    send(actions)
+}
 
-        private val lock = Any()
-
-        private var _isCompleted = false
-        private var disposable: Disposable? = null
-
-        override fun cancel() {
-            synchronized(lock) {
-                disposable?.dispose()
-                disposable = null
-            }
-        }
-
-        override fun start() {
-            synchronized(lock) {
-                if (disposable == null) {
-                    disposable = flowable
-                        .doOnCancel { }
-                        .doOnComplete { }
-                        .doOnError { }
-                        .subscribe(onNext, onError, onComplete)
-                }
-            }
-        }
-
-    }
+infix fun SideEffect.Context.Tasks.cancel(key: String) {
+    cancel(key)
 }
