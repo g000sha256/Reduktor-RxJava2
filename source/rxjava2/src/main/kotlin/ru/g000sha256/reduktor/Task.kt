@@ -1,11 +1,11 @@
 package ru.g000sha256.reduktor
 
-interface Task {
+abstract class Task {
 
-    val isCompleted: Boolean
+    internal abstract val onComplete: () -> Unit
 
-    fun cancel()
+    internal abstract fun cancel()
 
-    fun start()
+    internal abstract fun start()
 
 }
