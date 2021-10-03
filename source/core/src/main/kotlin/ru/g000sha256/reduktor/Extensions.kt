@@ -1,15 +1,15 @@
 package ru.g000sha256.reduktor
 
-infix fun <A> Sender<A>.send(action: A) {
-    send(action)
+infix fun <A> Actions<A>.post(action: A) {
+    post(action)
 }
 
-infix fun <A> Sender<A>.send(actions: Array<A>) {
-    send(*actions)
+infix fun <A> Actions<A>.post(actions: Array<A>) {
+    post(*actions)
 }
 
-infix fun <A> Sender<A>.send(actions: Iterable<A>) {
-    send(actions)
+infix fun <A> Actions<A>.post(actions: Iterable<A>) {
+    post(actions)
 }
 
 infix fun SideEffect.Context.Tasks.cancel(key: String) {

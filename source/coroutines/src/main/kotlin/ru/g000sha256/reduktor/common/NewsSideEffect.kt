@@ -2,7 +2,6 @@ package ru.g000sha256.reduktor.common
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import ru.g000sha256.reduktor.SideEffect
 
 abstract class NewsSideEffect<A, S, T> : SideEffect<A, S> {
 

@@ -6,7 +6,7 @@ fun interface Initializer<A, S> {
 
     interface Context<A> {
 
-        val sender: Sender<A>
+        val actions: Actions<A>
         val tasks: Tasks
 
         interface Tasks {
