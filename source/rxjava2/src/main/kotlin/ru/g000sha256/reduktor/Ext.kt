@@ -19,7 +19,7 @@ fun <A, S> RxJavaReduktor(
     return RxJavaReduktorImpl(behaviorProcessor, reduktor)
 }
 
-fun <A, S> CoroutinesReduktor(
+fun <A, S> RxJavaReduktor(
     initialState: S,
     middlewares: Iterable<Middleware<A, S>> = emptyList(),
     logger: Logger = Logger {}
