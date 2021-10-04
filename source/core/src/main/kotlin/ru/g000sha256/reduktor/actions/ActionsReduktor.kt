@@ -12,14 +12,7 @@ internal class ActionsReduktor<A, S>(
     initialState: S
 ) : Reduktor<A, S> {
 
-    private val actions = Actions(::dispatch)
     private val lock = Any()
-
-    private val thread: String
-        get() {
-            val thread = Thread.currentThread()
-            return thread.name
-        }
 
     private var state = initialState
 
@@ -27,29 +20,35 @@ internal class ActionsReduktor<A, S>(
         synchronized(lock) {
             initializers.forEach {
                 val state = state
-                it.apply { actions.invoke(state) }
+                it.apply { invoke(state) }
             }
         }
     }
 
-    override fun dispatch(action: A) {
+    override fun dispatch(value: A) {
         synchronized(lock) {
             val oldState = state
             logger.invoke("---------")
-            logger.invoke("ACTION > $action")
+            logger.invoke("ACTION > $value")
             logger.invoke("STATE  > $oldState")
-            val newState = reducer.run { oldState.invoke(action) }
+            val newState = reducer.run { oldState.invoke(value) }
+            val threadName = getThreadName()
             if (newState == oldState) {
                 logger.invoke("STATE    NOT CHANGED")
-                logger.invoke("THREAD   $thread")
+                logger.invoke("THREAD   $threadName")
             } else {
                 state = newState
                 logger.invoke("STATE  < $newState")
-                logger.invoke("THREAD   $thread")
+                logger.invoke("THREAD   $threadName")
                 onNewState(newState)
             }
-            sideEffects.forEach { it.apply { actions.invoke(action, newState) } }
+            sideEffects.forEach { it.apply { invoke(value, newState) } }
         }
+    }
+
+    private fun getThreadName(): String {
+        val thread = Thread.currentThread()
+        return thread.name
     }
 
 }

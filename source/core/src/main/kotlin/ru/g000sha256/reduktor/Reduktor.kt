@@ -1,7 +1,3 @@
 package ru.g000sha256.reduktor
 
-interface Reduktor<A, S> {
-
-    fun dispatch(action: A)
-
-}
+interface Reduktor<A, S> : Dispatcher<A>
