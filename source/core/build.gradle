@@ -1,2 +1,7 @@
 apply plugin: "maven"
 apply from: "$rootDir/gradle/kotlin.gradle"
+apply from: "$rootDir/gradle/coverage.gradle"
+dependencies {
+    testImplementation libTest.jUnit
+    testImplementation libTest.mockito
+}

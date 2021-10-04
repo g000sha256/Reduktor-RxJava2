@@ -1,13 +1,11 @@
 package ru.g000sha256.reduktor
 
-abstract class Reduktor<A, S> {
+interface Reduktor<A, S> {
 
-    abstract fun dispatch(action: A)
+    fun dispatch(action: A)
 
-    abstract fun start()
+    fun start()
 
-    abstract fun stop()
-
-    protected abstract fun onNewState(state: S)
+    fun stop()
 
 }
