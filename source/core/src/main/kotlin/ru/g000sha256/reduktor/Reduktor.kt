@@ -4,8 +4,4 @@ interface Reduktor<A, S> {
 
     fun dispatch(action: A)
 
-    fun start()
-
-    fun stop()
-
 }
