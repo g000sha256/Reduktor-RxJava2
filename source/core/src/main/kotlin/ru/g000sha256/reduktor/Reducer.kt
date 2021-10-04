@@ -1,4 +1,4 @@
-package ru.g000sha256.reduktor.actions
+package ru.g000sha256.reduktor
 
 fun interface Reducer<A, S> {
 

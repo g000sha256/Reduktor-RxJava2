@@ -1,18 +1,14 @@
-package ru.g000sha256.reduktor.actions
+package ru.g000sha256.reduktor
 
-import ru.g000sha256.reduktor.Logger
-import ru.g000sha256.reduktor.Reduktor
-
-internal class ActionsReduktor<A, S>(
+internal class StoreImpl<A, S>(
     private val initializers: Iterable<Initializer<A, S>>,
     private val sideEffects: Iterable<SideEffect<A, S>>,
     private val logger: Logger,
     private val reducer: Reducer<A, S>,
     private val onNewState: (S) -> Unit,
     private var state: S
-) : Reduktor<A> {
+) : Store<A> {
 
-    private val actions = Actions(::dispatch)
     private val lock = Any()
 
     private val thread: Thread
@@ -24,12 +20,12 @@ internal class ActionsReduktor<A, S>(
         synchronized(lock) {
             initializers.forEach {
                 val state = state
-                it.apply { actions.invoke(state) }
+                it.apply { invoke(state) }
             }
         }
     }
 
-    override fun dispatch(action: A) {
+    override fun post(action: A) {
         synchronized(lock) {
             val oldState = state
             logger.invoke("--------")
@@ -44,7 +40,7 @@ internal class ActionsReduktor<A, S>(
                 logger.invoke("THREAD: ${thread.name}")
                 onNewState(newState)
             }
-            sideEffects.forEach { it.apply { actions.invoke(action, newState) } }
+            sideEffects.forEach { it.apply { invoke(action, newState) } }
         }
     }
 
