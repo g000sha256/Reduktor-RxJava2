@@ -12,7 +12,7 @@ internal class ActionsReduktor<A, S>(
     initialState: S
 ) : Reduktor<A, S> {
 
-    private val actions: Actions<A>
+    private val actions = Actions(::dispatch)
     private val lock = Any()
 
     private val thread: String
@@ -24,21 +24,6 @@ internal class ActionsReduktor<A, S>(
     private var state = initialState
 
     init {
-        actions = object : Actions<A> {
-
-            override fun post(action: A) {
-                dispatch(action)
-            }
-
-            override fun post(vararg actions: A) {
-                actions.forEach(::dispatch)
-            }
-
-            override fun post(actions: Iterable<A>) {
-                actions.forEach(::dispatch)
-            }
-
-        }
         synchronized(lock) {
             initializers.forEach {
                 val state = state

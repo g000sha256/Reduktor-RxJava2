@@ -11,7 +11,7 @@ internal class StatesReduktor<A, S>(
 ) : Reduktor<A, S> {
 
     private val lock = Any()
-    private val states: States<S>
+    private val states = States(::updateState)
 
     private val thread: String
         get() {
@@ -20,16 +20,6 @@ internal class StatesReduktor<A, S>(
         }
 
     private var state = initialState
-
-    init {
-        states = object : States<S> {
-
-            override fun post(state: S) {
-                updateState(state)
-            }
-
-        }
-    }
 
     override fun dispatch(action: A) {
         synchronized(lock) {
