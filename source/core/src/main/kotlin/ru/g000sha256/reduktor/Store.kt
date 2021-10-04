@@ -1,5 +1,4 @@
-/*
-package ru.g000sha256.reduktor
+/*package ru.g000sha256.reduktor
 
 import io.reactivex.Flowable
 import io.reactivex.processors.BehaviorProcessor
