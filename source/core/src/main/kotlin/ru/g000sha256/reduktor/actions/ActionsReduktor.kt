@@ -19,6 +19,8 @@ internal class ActionsReduktor<A, S>(
         get() = Thread.currentThread()
 
     init {
+        logger.invoke("STATE : $state")
+        logger.invoke("THREAD: ${thread.name}")
         synchronized(lock) {
             initializers.forEach {
                 val state = state
@@ -30,17 +32,16 @@ internal class ActionsReduktor<A, S>(
     override fun dispatch(action: A) {
         synchronized(lock) {
             val oldState = state
-            logger.invoke("---------")
-            logger.invoke("ACTION > $action")
-            logger.invoke("STATE  > $oldState")
+            logger.invoke("--------")
+            logger.invoke("ACTION: $action")
             val newState = reducer.run { oldState.invoke(action) }
             if (newState == oldState) {
-                logger.invoke("STATE    NOT CHANGED")
-                logger.invoke("THREAD   ${thread.name}")
+                logger.invoke("STATE : NOT CHANGED")
+                logger.invoke("THREAD: ${thread.name}")
             } else {
                 state = newState
-                logger.invoke("STATE  < $newState")
-                logger.invoke("THREAD   ${thread.name}")
+                logger.invoke("STATE : $newState")
+                logger.invoke("THREAD: ${thread.name}")
                 onNewState(newState)
             }
             sideEffects.forEach { it.apply { actions.invoke(action, newState) } }

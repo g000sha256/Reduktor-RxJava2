@@ -16,26 +16,30 @@ internal class StatesReduktor<A, S>(
     private val thread: Thread
         get() = Thread.currentThread()
 
+    init {
+        logger.invoke("STATE : $state")
+        logger.invoke("THREAD: ${thread.name}")
+    }
+
     override fun dispatch(action: A) {
         synchronized(lock) {
-            logger.invoke("---------")
-            logger.invoke("ACTION > $action")
-            logger.invoke("STATE  > $state")
-            logger.invoke("THREAD   ${thread.name}")
+            logger.invoke("--------")
+            logger.invoke("ACTION: $action")
+            logger.invoke("THREAD: ${thread.name}")
             middlewares.forEach { it.apply { states.invoke(action, state) } }
         }
     }
 
     private fun updateState(newState: S) {
         synchronized(lock) {
-            logger.invoke("---------")
+            logger.invoke("--------")
             if (newState == state) {
-                logger.invoke("STATE    NOT CHANGED")
-                logger.invoke("THREAD   ${thread.name}")
+                logger.invoke("STATE : NOT CHANGED")
+                logger.invoke("THREAD: ${thread.name}")
             } else {
                 state = newState
-                logger.invoke("STATE  < $newState")
-                logger.invoke("THREAD   ${thread.name}")
+                logger.invoke("STATE : $newState")
+                logger.invoke("THREAD: ${thread.name}")
                 onNewState(newState)
             }
         }
