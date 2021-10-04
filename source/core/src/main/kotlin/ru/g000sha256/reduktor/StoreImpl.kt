@@ -17,19 +17,14 @@ internal class StoreImpl<A, S>(
     init {
         logger.invoke("STATE : $state")
         logger.invoke("THREAD: ${thread.name}")
-        synchronized(lock) {
-            initializers.forEach {
-                val state = state
-                it.apply { invoke(state) }
-            }
-        }
+        synchronized(lock) { initializers.forEach { it.apply { invoke(state) } } }
     }
 
     override fun post(action: A) {
         synchronized(lock) {
-            val oldState = state
             logger.invoke("--------")
             logger.invoke("ACTION: $action")
+            val oldState = state
             val newState = reducer.run { oldState.invoke(action) }
             if (newState == oldState) {
                 logger.invoke("STATE : NOT CHANGED")
