@@ -1,24 +1,23 @@
-package ru.g000sha256.reduktor.state_machine
+package ru.g000sha256.reduktor.states
 
 import ru.g000sha256.reduktor.Logger
+import ru.g000sha256.reduktor.Reduktor
 
-abstract class StateMachine<A, S>(
+abstract class StatesReduktor<A, S>(
     initialState: S,
     private val middlewares: Iterable<Middleware<A, S>> = emptyList(),
     private val logger: Logger = Logger {}
-) {
+) : Reduktor<A, S>() {
 
-    protected abstract fun onNewState(state: S)
-
-    fun dispatch(action: A) {
+    override fun dispatch(action: A) {
         // ToDo
     }
 
-    fun start() {
+    override fun start() {
         // ToDo
     }
 
-    fun stop() {
+    override fun stop() {
         // ToDo
     }
 

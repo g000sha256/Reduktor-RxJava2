@@ -1,4 +1,4 @@
-package ru.g000sha256.reduktor.redux
+package ru.g000sha256.reduktor.actions
 
 interface Actions<A> {
 
