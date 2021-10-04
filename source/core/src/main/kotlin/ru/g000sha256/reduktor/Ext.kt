@@ -14,7 +14,7 @@ fun <A, S> Reduktor(
     sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
     logger: Logger = Logger {},
     onNewState: (state: S) -> Unit
-): Reduktor<A, S> {
+): Reduktor<A> {
     return ActionsReduktor(initializers, sideEffects, logger, reducer, onNewState, initialState)
 }
 
@@ -23,6 +23,6 @@ fun <A, S> Reduktor(
     middlewares: Iterable<Middleware<A, S>> = emptyList(),
     logger: Logger = Logger {},
     onNewState: (state: S) -> Unit
-): Reduktor<A, S> {
+): Reduktor<A> {
     return StatesReduktor(middlewares, logger, onNewState, initialState)
 }

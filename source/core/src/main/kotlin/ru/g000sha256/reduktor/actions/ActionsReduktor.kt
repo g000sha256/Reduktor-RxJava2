@@ -10,8 +10,9 @@ internal class ActionsReduktor<A, S>(
     private val reducer: Reducer<A, S>,
     private val onNewState: (S) -> Unit,
     private var state: S
-) : Reduktor<A, S> {
+) : Reduktor<A> {
 
+    private val actions = Actions(::dispatch)
     private val lock = Any()
 
     private val thread: Thread
@@ -21,18 +22,18 @@ internal class ActionsReduktor<A, S>(
         synchronized(lock) {
             initializers.forEach {
                 val state = state
-                it.apply { invoke(state) }
+                it.apply { actions.invoke(state) }
             }
         }
     }
 
-    override fun dispatch(value: A) {
+    override fun dispatch(action: A) {
         synchronized(lock) {
             val oldState = state
             logger.invoke("---------")
-            logger.invoke("ACTION > $value")
+            logger.invoke("ACTION > $action")
             logger.invoke("STATE  > $oldState")
-            val newState = reducer.run { oldState.invoke(value) }
+            val newState = reducer.run { oldState.invoke(action) }
             if (newState == oldState) {
                 logger.invoke("STATE    NOT CHANGED")
                 logger.invoke("THREAD   ${thread.name}")
@@ -42,7 +43,7 @@ internal class ActionsReduktor<A, S>(
                 logger.invoke("THREAD   ${thread.name}")
                 onNewState(newState)
             }
-            sideEffects.forEach { it.apply { invoke(value, newState) } }
+            sideEffects.forEach { it.apply { actions.invoke(action, newState) } }
         }
     }
 

@@ -31,5 +31,5 @@ fun <A, S> CoroutinesReduktor(
 
 private class CoroutinesReduktorImpl<A, S>(
     override val states: Flow<S>,
-    reduktor: Reduktor<A, S>
-) : CoroutinesReduktor<A, S>, Reduktor<A, S> by reduktor
+    reduktor: Reduktor<A>
+) : CoroutinesReduktor<A, S>, Reduktor<A> by reduktor

@@ -1,6 +1,5 @@
 package ru.g000sha256.reduktor.states
 
-import ru.g000sha256.reduktor.Dispatcher
 import ru.g000sha256.reduktor.Logger
 import ru.g000sha256.reduktor.Reduktor
 
@@ -9,21 +8,21 @@ internal class StatesReduktor<A, S>(
     private val logger: Logger,
     private val onNewState: (S) -> Unit,
     private var state: S
-) : Reduktor<A, S> {
+) : Reduktor<A> {
 
     private val lock = Any()
-    private val dispatcher = Dispatcher(::updateState)
+    private val states = States(::updateState)
 
     private val thread: Thread
         get() = Thread.currentThread()
 
-    override fun dispatch(value: A) {
+    override fun dispatch(action: A) {
         synchronized(lock) {
             logger.invoke("---------")
-            logger.invoke("ACTION > $value")
+            logger.invoke("ACTION > $action")
             logger.invoke("STATE  > $state")
             logger.invoke("THREAD   ${thread.name}")
-            middlewares.forEach { it.apply { dispatcher.invoke(value, state) } }
+            middlewares.forEach { it.apply { states.invoke(action, state) } }
         }
     }
 

@@ -31,5 +31,5 @@ fun <A, S> RxJavaReduktor(
 
 private class RxJavaReduktorImpl<A, S>(
     override val states: Flowable<S>,
-    reduktor: Reduktor<A, S>
-) : RxJavaReduktor<A, S>, Reduktor<A, S> by reduktor
+    reduktor: Reduktor<A>
+) : RxJavaReduktor<A, S>, Reduktor<A> by reduktor
