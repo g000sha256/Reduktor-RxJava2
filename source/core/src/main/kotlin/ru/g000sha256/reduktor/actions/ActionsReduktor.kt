@@ -9,12 +9,13 @@ internal class ActionsReduktor<A, S>(
     private val logger: Logger,
     private val reducer: Reducer<A, S>,
     private val onNewState: (S) -> Unit,
-    initialState: S
+    private var state: S
 ) : Reduktor<A, S> {
 
     private val lock = Any()
 
-    private var state = initialState
+    private val thread: Thread
+        get() = Thread.currentThread()
 
     init {
         synchronized(lock) {
@@ -32,23 +33,17 @@ internal class ActionsReduktor<A, S>(
             logger.invoke("ACTION > $value")
             logger.invoke("STATE  > $oldState")
             val newState = reducer.run { oldState.invoke(value) }
-            val threadName = getThreadName()
             if (newState == oldState) {
                 logger.invoke("STATE    NOT CHANGED")
-                logger.invoke("THREAD   $threadName")
+                logger.invoke("THREAD   ${thread.name}")
             } else {
                 state = newState
                 logger.invoke("STATE  < $newState")
-                logger.invoke("THREAD   $threadName")
+                logger.invoke("THREAD   ${thread.name}")
                 onNewState(newState)
             }
             sideEffects.forEach { it.apply { invoke(value, newState) } }
         }
-    }
-
-    private fun getThreadName(): String {
-        val thread = Thread.currentThread()
-        return thread.name
     }
 
 }

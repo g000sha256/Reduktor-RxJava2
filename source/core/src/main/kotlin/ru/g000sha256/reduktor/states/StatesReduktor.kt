@@ -8,42 +8,35 @@ internal class StatesReduktor<A, S>(
     private val middlewares: Iterable<Middleware<A, S>>,
     private val logger: Logger,
     private val onNewState: (S) -> Unit,
-    initialState: S
+    private var state: S
 ) : Reduktor<A, S> {
 
     private val lock = Any()
     private val dispatcher = Dispatcher(::updateState)
 
-    private var state = initialState
+    private val thread: Thread
+        get() = Thread.currentThread()
 
     override fun dispatch(value: A) {
         synchronized(lock) {
-            val oldState = state
             logger.invoke("---------")
             logger.invoke("ACTION > $value")
-            logger.invoke("STATE  > $oldState")
-            val threadName = getThreadName()
-            logger.invoke("THREAD   $threadName")
-            middlewares.forEach { it.apply { dispatcher.invoke(value, oldState) } }
+            logger.invoke("STATE  > $state")
+            logger.invoke("THREAD   ${thread.name}")
+            middlewares.forEach { it.apply { dispatcher.invoke(value, state) } }
         }
-    }
-
-    private fun getThreadName(): String {
-        val thread = Thread.currentThread()
-        return thread.name
     }
 
     private fun updateState(newState: S) {
         synchronized(lock) {
             logger.invoke("---------")
-            val threadName = getThreadName()
             if (newState == state) {
                 logger.invoke("STATE    NOT CHANGED")
-                logger.invoke("THREAD   $threadName")
+                logger.invoke("THREAD   ${thread.name}")
             } else {
                 state = newState
                 logger.invoke("STATE  < $newState")
-                logger.invoke("THREAD   $threadName")
+                logger.invoke("THREAD   ${thread.name}")
                 onNewState(newState)
             }
         }
