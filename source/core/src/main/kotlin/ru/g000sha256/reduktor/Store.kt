@@ -12,29 +12,36 @@ class Store<A, S>(
     private val actionsOwner: ActionsOwner<A>
     private val lock = Any()
 
-    private val thread: Thread
-        get() = Thread.currentThread()
-
     init {
         val actions = Actions(::post)
         actionsOwner = ActionsOwnerImpl(actions)
-        logger.invoke("STATE : $state")
-        logger.invoke("THREAD: ${thread.name}")
+        logger.apply {
+            invoke("STATE  : $state")
+            logThread()
+        }
         synchronized(lock) { initializers.forEach { it.apply { actionsOwner.invoke(state) } } }
     }
 
     private fun post(action: A) {
         synchronized(lock) {
-            logger.invoke("--------")
-            logger.invoke("ACTION: $action")
-            val newState = reducer.run { state.invoke(action) }
-            if (newState == state) {
-                logger.invoke("STATE : NOT CHANGED")
-                logger.invoke("THREAD: ${thread.name}")
+            val oldState = state
+            logger.apply {
+                logSeparator()
+                invoke("ACTION > $action")
+                invoke("STATE  > $oldState")
+            }
+            val newState = reducer.run { oldState.invoke(action) }
+            if (newState == oldState) {
+                logger.apply {
+                    invoke("STATE  : NOT CHANGED")
+                    logThread()
+                }
             } else {
                 state = newState
-                logger.invoke("STATE : $newState")
-                logger.invoke("THREAD: ${thread.name}")
+                logger.apply {
+                    invoke("STATE  < $newState")
+                    logThread()
+                }
                 onNewState(newState)
             }
             sideEffects.forEach { it.apply { actionsOwner.invoke(action, newState) } }
