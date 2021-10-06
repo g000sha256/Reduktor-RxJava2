@@ -1,7 +1,7 @@
 package ru.g000sha256.reduktor
 
 class Store<A, S>(
-    private var state: S,
+    initialState: S,
     private val reducer: Reducer<A, S>,
     private val initializers: Iterable<Initializer<A, S>> = emptyList(),
     private val sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
@@ -12,6 +12,8 @@ class Store<A, S>(
     private val actionsOwner: ActionsOwner<A>
     private val lock = Any()
 
+    private var state = initialState
+
     init {
         val actions = Actions(::post)
         actionsOwner = ActionsOwnerImpl(actions)
@@ -19,7 +21,10 @@ class Store<A, S>(
             invoke("STATE  : $state")
             logThread()
         }
-        synchronized(lock) { initializers.forEach { it.apply { actionsOwner.invoke(state) } } }
+        synchronized(lock) {
+            val state = state
+            initializers.forEach { it.apply { actionsOwner.invoke(state) } }
+        }
     }
 
     private fun post(action: A) {
