@@ -15,7 +15,21 @@ class Store<A, S>(
     private var state = initialState
 
     init {
-        val actions = Actions(::post)
+        val actions = object : Actions<A> {
+
+            override fun post(action: A) {
+                handleAction(action)
+            }
+
+            override fun post(vararg actions: A) {
+                actions.forEach(::handleAction)
+            }
+
+            override fun post(actions: Iterable<A>) {
+                actions.forEach(::handleAction)
+            }
+
+        }
         actionsOwner = ActionsOwnerImpl(actions)
         logger.apply {
             invoke("STATE  : $state")
@@ -27,7 +41,7 @@ class Store<A, S>(
         }
     }
 
-    private fun post(action: A) {
+    private fun handleAction(action: A) {
         synchronized(lock) {
             val oldState = state
             logger.apply {
