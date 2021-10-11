@@ -8,17 +8,17 @@ class Store<A, S>(
     coroutineScope: CoroutineScope,
     initialState: S,
     private val reducer: Reducer<A, S>,
-    initializers: Iterable<Initializer<A, S>> = emptyList(),
-    private val sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
+    initializers: Collection<Initializer<A, S>> = emptyList(),
+    sideEffects: Collection<SideEffect<A, S>> = emptyList(),
     private val logger: Logger = Logger {}
 ) {
 
     val states: Flow<S>
 
     private val any = Any()
-    private val environmentsMutableList = mutableListOf<Environment<A>>()
-    private val tasksMutableList = mutableListOf<Task>()
-    private val tasksMutableMap = mutableMapOf<String, Task>()
+    private val environmentsArrayList = ArrayList<Environment<A>>()
+    private val initializersArrayList = ArrayList(initializers)
+    private val sideEffectsArrayList = ArrayList(sideEffects)
     private val mutableStateFlow = MutableStateFlow(initialState)
 
     private var isReleased = false
@@ -30,13 +30,16 @@ class Store<A, S>(
         logger.invoke("-------INIT-------")
         logger.invoke("STATE  : $initialState")
         logThread()
-        sideEffects.forEach {
-            val environment = EnvironmentImpl(coroutineScope = coroutineScope)
-            environmentsMutableList.add(environment)
+        val actions = ActionsImpl()
+        for (a in 0 until sideEffectsArrayList.size) {
+            val tasks = TasksImpl()
+            val environment = EnvironmentImpl(actions, coroutineScope, tasks)
+            environmentsArrayList += environment
         }
-        initializers.forEach {
-            val environment = EnvironmentImpl(coroutineScope = coroutineScope)
-            environmentsMutableList.add(environment)
+        initializersArrayList.forEach {
+            val tasks = TasksImpl()
+            val environment = EnvironmentImpl(actions, coroutineScope, tasks)
+            environmentsArrayList += environment
             it.apply { environment.invoke(initialState) }
         }
     }
@@ -44,7 +47,7 @@ class Store<A, S>(
     fun release() {
         synchronized(any) {
             isReleased = true
-            environmentsMutableList.forEach { it.tasks.clearAll() }
+            environmentsArrayList.forEach { it.tasks.clearAll() }
             logger.invoke("-----RELEASED-----")
             logThread()
         }
@@ -65,8 +68,8 @@ class Store<A, S>(
             logThread()
             mutableStateFlow.value = newState
         }
-        sideEffects.forEachIndexed { index, sideEffect ->
-            val environment = environmentsMutableList[index]
+        sideEffectsArrayList.forEachIndexed { index, sideEffect ->
+            val environment = environmentsArrayList[index]
             sideEffect.apply { environment.invoke(action, newState) }
         }
     }
@@ -118,13 +121,16 @@ class Store<A, S>(
 
     }
 
-    private inner class EnvironmentImpl(
-        override val actions: Actions<A> = ActionsImpl(),
+    private class EnvironmentImpl<A>(
+        override val actions: Actions<A>,
         override val coroutineScope: CoroutineScope,
-        override val tasks: Tasks = TasksImpl()
+        override val tasks: Tasks
     ) : Environment<A>
 
     private inner class TasksImpl : Tasks {
+
+        private val tasksArrayList = ArrayList<Task>()
+        private val tasksHashMap = HashMap<String, Task>()
 
         override fun add(task: Task) {
             synchronized(any) {
@@ -132,7 +138,7 @@ class Store<A, S>(
                 checkContains(task)
                 task.id = ++counter
                 logTaskAdded(task)
-                tasksMutableList += task
+                tasksArrayList += task
                 task.start { synchronized(any) { removeFromList(task) } }
             }
         }
@@ -145,14 +151,14 @@ class Store<A, S>(
                 task.id = ++counter
                 task.key = key
                 logTaskAdded(task)
-                tasksMutableMap[key] = task
+                tasksHashMap[key] = task
                 task.start { synchronized(any) { removeFromMap(task) } }
             }
         }
 
         override fun clear(key: String) {
             synchronized(any) {
-                val task = tasksMutableMap.remove(key) ?: return@synchronized
+                val task = tasksHashMap.remove(key) ?: return@synchronized
                 logTaskRemoved(task)
                 task.cancel()
             }
@@ -160,19 +166,19 @@ class Store<A, S>(
 
         override fun clearAll() {
             synchronized(any) {
-                if (tasksMutableList.size > 0) {
-                    tasksMutableList
+                if (tasksArrayList.size > 0) {
+                    tasksArrayList
                         .toList()
-                        .apply { tasksMutableList.clear() }
+                        .apply { tasksArrayList.clear() }
                         .forEach {
                             logTaskRemoved(it)
                             it.cancel()
                         }
                 }
-                if (tasksMutableMap.size > 0) {
-                    tasksMutableMap
+                if (tasksHashMap.size > 0) {
+                    tasksHashMap
                         .toMap()
-                        .apply { tasksMutableMap.clear() }
+                        .apply { tasksHashMap.clear() }
                         .forEach {
                             logTaskRemoved(it.value)
                             it.value.cancel()
@@ -190,19 +196,19 @@ class Store<A, S>(
         }
 
         private fun checkContains(task: Task) {
-            val contains = tasksMutableList.contains(task) || tasksMutableMap.containsValue(task)
+            val contains = tasksArrayList.contains(task) || tasksHashMap.containsValue(task)
             if (contains) throw IllegalArgumentException() // ToDo
         }
 
         private fun removeFromList(task: Task) {
             logTaskRemoved(task)
-            tasksMutableList.remove(task)
+            tasksArrayList.remove(task)
         }
 
         private fun removeFromMap(task: Task) {
-            val entry = tasksMutableMap.entries.find { it.value == task } ?: return
+            val entry = tasksHashMap.entries.find { it.value == task } ?: return
             logTaskRemoved(task)
-            tasksMutableMap.remove(entry.key)
+            tasksHashMap.remove(entry.key)
         }
 
     }
