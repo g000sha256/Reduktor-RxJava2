@@ -15,10 +15,8 @@ class Store<A, S>(
     private var state = initialState
 
     init {
-        logger.apply {
-            invoke("STATE  : $initialState")
-            logThread()
-        }
+        logger.invoke("STATE  : $initialState")
+        logger.logThread()
         onNewState(initialState)
         initializers.forEach { it.apply { actionsOwner.invoke(initialState) } }
     }
@@ -51,11 +49,9 @@ class Store<A, S>(
 
     private fun handleAction(action: A) {
         val oldState = state
-        logger.apply {
-            invoke("---------")
-            invoke("ACTION > $action")
-            invoke("STATE  > $oldState")
-        }
+        logger.invoke("---------")
+        logger.invoke("ACTION > $action")
+        logger.invoke("STATE  > $oldState")
         val newState = reducer.run { oldState.invoke(action) }
         if (newState == oldState) {
             logger.apply {
@@ -64,10 +60,8 @@ class Store<A, S>(
             }
         } else {
             state = newState
-            logger.apply {
-                invoke("STATE  < $newState")
-                logThread()
-            }
+            logger.invoke("STATE  < $newState")
+            logger.logThread()
             onNewState(newState)
         }
         sideEffects.forEach { it.apply { actionsOwner.invoke(action, newState) } }
