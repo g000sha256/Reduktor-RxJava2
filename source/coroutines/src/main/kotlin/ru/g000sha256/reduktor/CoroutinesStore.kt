@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class CoroutinesStore<A, S>(
-    state: S,
+    initialState: S,
     reducer: Reducer<A, S>,
     initializers: Iterable<Initializer<A, S>> = emptyList(),
     sideEffects: Iterable<SideEffect<A, S>> = emptyList(),
@@ -14,9 +14,9 @@ class CoroutinesStore<A, S>(
     val states: Flow<S>
 
     init {
-        val mutableStateFlow = MutableStateFlow(state)
+        val mutableStateFlow = MutableStateFlow(initialState)
         states = mutableStateFlow
-        Store(state, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
+        Store(initialState, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
     }
 
 }
