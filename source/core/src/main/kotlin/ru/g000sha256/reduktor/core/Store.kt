@@ -1,4 +1,4 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.core
 
 class Store<A, S>(
     initialState: S,

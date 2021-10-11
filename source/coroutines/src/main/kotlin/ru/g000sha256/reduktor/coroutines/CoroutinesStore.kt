@@ -1,7 +1,12 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.coroutines
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import ru.g000sha256.reduktor.core.Initializer
+import ru.g000sha256.reduktor.core.Logger
+import ru.g000sha256.reduktor.core.Reducer
+import ru.g000sha256.reduktor.core.SideEffect
+import ru.g000sha256.reduktor.core.Store
 
 class CoroutinesStore<A, S>(
     initialState: S,

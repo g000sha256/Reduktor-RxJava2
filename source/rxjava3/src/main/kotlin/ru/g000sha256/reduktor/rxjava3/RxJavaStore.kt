@@ -1,7 +1,12 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.rxjava3
 
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
+import ru.g000sha256.reduktor.core.Initializer
+import ru.g000sha256.reduktor.core.Logger
+import ru.g000sha256.reduktor.core.Reducer
+import ru.g000sha256.reduktor.core.SideEffect
+import ru.g000sha256.reduktor.core.Store
 
 class RxJavaStore<A, S>(
     initialState: S,

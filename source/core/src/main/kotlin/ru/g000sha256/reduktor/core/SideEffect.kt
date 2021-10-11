@@ -1,4 +1,4 @@
-package ru.g000sha256.reduktor
+package ru.g000sha256.reduktor.core
 
 fun interface SideEffect<A, S> {
 
