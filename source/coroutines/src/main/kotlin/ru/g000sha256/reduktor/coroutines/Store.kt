@@ -46,6 +46,7 @@ class Store<A, S>(
 
     fun release() {
         synchronized(any) {
+            if (isReleased) return@synchronized
             isReleased = true
             environmentsArrayList.forEach { it.tasks.clearAll() }
             logger.invoke("-----RELEASED-----")
@@ -197,7 +198,7 @@ class Store<A, S>(
 
         private fun checkContains(task: Task) {
             val contains = tasksArrayList.contains(task) || tasksHashMap.containsValue(task)
-            if (contains) throw IllegalArgumentException() // ToDo
+            if (contains) throw IllegalArgumentException("Task has already been added")
         }
 
         private fun removeFromList(task: Task) {
