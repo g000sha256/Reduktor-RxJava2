@@ -54,10 +54,8 @@ class Store<A, S>(
         logger.invoke("STATE  > $oldState")
         val newState = reducer.run { oldState.invoke(action) }
         if (newState == oldState) {
-            logger.apply {
-                invoke("STATE  : NOT CHANGED")
-                logThread()
-            }
+            logger.invoke("STATE  : NOT CHANGED")
+            logger.logThread()
         } else {
             state = newState
             logger.invoke("STATE  < $newState")
