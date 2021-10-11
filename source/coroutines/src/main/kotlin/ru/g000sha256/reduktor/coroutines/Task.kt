@@ -5,6 +5,9 @@ import kotlinx.coroutines.Job
 
 class Task internal constructor(private val job: Job) {
 
+    internal var id = 0
+    internal var key: String? = null
+
     internal fun cancel() {
         val internalCancellationException = InternalCancellationException()
         job.cancel(internalCancellationException)

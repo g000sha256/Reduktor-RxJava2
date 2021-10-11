@@ -21,10 +21,8 @@ class Store<A, S>(
     private val mutableMap = mutableMapOf<String, Task>()
     private val mutableStateFlow = MutableStateFlow(initialState)
 
-    private val thread: Thread
-        get() = Thread.currentThread()
-
     private var isReleased = false
+    private var counter = 0
     private var state = initialState
 
     init {
@@ -34,7 +32,7 @@ class Store<A, S>(
         states = mutableStateFlow
         logger.invoke("-------INIT-------")
         logger.invoke("STATE  : $initialState")
-        logger.invoke("THREAD : ${thread.name}")
+        logThread()
         initializers.forEach { it.apply { environment.invoke(initialState) } }
     }
 
@@ -43,7 +41,7 @@ class Store<A, S>(
             isReleased = true
             clearAllTasks()
             logger.invoke("-----RELEASED-----")
-            logger.invoke("THREAD : ${thread.name}")
+            logThread()
         }
     }
 
@@ -53,7 +51,7 @@ class Store<A, S>(
                 .toList()
                 .apply { mutableList.clear() }
                 .forEach {
-                    logTaskRemoved()
+                    logTaskRemoved(it)
                     it.cancel()
                 }
         }
@@ -62,7 +60,7 @@ class Store<A, S>(
                 .toMap()
                 .apply { mutableMap.clear() }
                 .forEach {
-                    logTaskRemoved()
+                    logTaskRemoved(it.value)
                     it.value.cancel()
                 }
         }
@@ -76,27 +74,34 @@ class Store<A, S>(
         val newState = reducer.run { oldState.invoke(action) }
         if (newState == oldState) {
             logger.invoke("STATE  : NOT CHANGED")
-            logger.invoke("THREAD : ${thread.name}")
+            logThread()
         } else {
             state = newState
             logger.invoke("STATE  < $newState")
-            logger.invoke("THREAD : ${thread.name}")
+            logThread()
             mutableStateFlow.value = newState
         }
         sideEffects.forEach { it.apply { environment.invoke(action, newState) } }
     }
 
-    private fun logTaskAdded(id: Int, key: String?) {
-        logger.invoke("----TASK ADDED----")
+    private fun logTask(id: Int, key: String?) {
         logger.invoke("ID     : $id")
         key?.also { logger.invoke("KEY    : $it") }
-        logger.invoke("THREAD : ${thread.name}")
+        logThread()
     }
 
-    private fun logTaskRemoved(id: Int, key: String?) {
+    private fun logTaskAdded(task: Task) {
+        logger.invoke("----TASK ADDED----")
+        logTask(task.id, task.key)
+    }
+
+    private fun logTaskRemoved(task: Task) {
         logger.invoke("---TASK REMOVED---")
-        logger.invoke("ID     : $id")
-        key?.also { logger.invoke("KEY    : $it") }
+        logTask(task.id, task.key)
+    }
+
+    private fun logThread() {
+        val thread = Thread.currentThread()
         logger.invoke("THREAD : ${thread.name}")
     }
 
@@ -138,8 +143,9 @@ class Store<A, S>(
             synchronized(any) {
                 if (isReleased) return@synchronized
                 checkContains(task)
+                task.id = ++counter
+                logTaskAdded(task)
                 mutableList += task
-                logTaskAdded()
                 task.start { synchronized(any) { removeFromList(task) } }
             }
         }
@@ -149,8 +155,10 @@ class Store<A, S>(
                 if (isReleased) return@synchronized
                 checkContains(task)
                 clear(key)
+                task.id = ++counter
+                task.key = key
+                logTaskAdded(task)
                 mutableMap[key] = task
-                logTaskAdded()
                 task.start { synchronized(any) { removeFromMap(task) } }
             }
         }
@@ -158,7 +166,7 @@ class Store<A, S>(
         override fun clear(key: String) {
             synchronized(any) {
                 val task = mutableMap.remove(key) ?: return@synchronized
-                logTaskRemoved()
+                logTaskRemoved(task)
                 task.cancel()
             }
         }
@@ -181,13 +189,13 @@ class Store<A, S>(
         }
 
         private fun removeFromList(task: Task) {
-            logTaskRemoved()
+            logTaskRemoved(task)
             mutableList.remove(task)
         }
 
         private fun removeFromMap(task: Task) {
             val entry = mutableMap.entries.find { it.value == task } ?: return
-            logTaskRemoved()
+            logTaskRemoved(task)
             mutableMap.remove(entry.key)
         }
 
