@@ -12,6 +12,7 @@ class Store<A, S>(
     private val actionsOwner = createActionsOwner()
     private val lock = Any()
 
+    private var isReleased = false
     private var state = initialState
 
     init {
@@ -21,19 +22,33 @@ class Store<A, S>(
         initializers.forEach { it.apply { actionsOwner.invoke(initialState) } }
     }
 
+    fun release() {
+        synchronized(lock) { isReleased = true }
+    }
+
     private fun createActions(): Actions<A> {
         return object : Actions<A> {
 
             override fun post(action: A) {
-                synchronized(lock) { handleAction(action) }
+                synchronized(lock) {
+                    if (isReleased) return@synchronized
+                    handleAction(action)
+                }
+
             }
 
             override fun post(vararg actions: A) {
-                synchronized(lock) { actions.forEach(::handleAction) }
+                synchronized(lock) {
+                    if (isReleased) return@synchronized
+                    actions.forEach(::handleAction)
+                }
             }
 
             override fun post(actions: Iterable<A>) {
-                synchronized(lock) { actions.forEach(::handleAction) }
+                synchronized(lock) {
+                    if (isReleased) return@synchronized
+                    actions.forEach(::handleAction)
+                }
             }
 
         }
