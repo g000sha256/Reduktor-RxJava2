@@ -16,7 +16,7 @@ class Store<A, S>(
     val states: Flow<S>
 
     private val any = Any()
-    private val environment: Environment<A>
+    private val environment = EnvironmentImpl(coroutineScope = coroutineScope)
     private val mutableList = mutableListOf<Task>()
     private val mutableMap = mutableMapOf<String, Task>()
     private val mutableStateFlow = MutableStateFlow(initialState)
@@ -26,9 +26,6 @@ class Store<A, S>(
     private var state = initialState
 
     init {
-        val actions = ActionsImpl()
-        val tasks = TasksImpl()
-        environment = EnvironmentImpl(actions, coroutineScope, tasks)
         states = mutableStateFlow
         logger.invoke("-------INIT-------")
         logger.invoke("STATE  : $initialState")
@@ -110,10 +107,10 @@ class Store<A, S>(
 
     }
 
-    private class EnvironmentImpl<A>(
-        override val actions: Actions<A>,
+    private inner class EnvironmentImpl(
+        override val actions: Actions<A> = ActionsImpl(),
         override val coroutineScope: CoroutineScope,
-        override val tasks: Tasks
+        override val tasks: Tasks = TasksImpl()
     ) : Environment<A>
 
     private inner class TasksImpl : Tasks {
