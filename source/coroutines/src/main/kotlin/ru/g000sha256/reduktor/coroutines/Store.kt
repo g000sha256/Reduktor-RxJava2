@@ -1,14 +1,14 @@
-package ru.g000sha256.reduktor.rxjava2
+package ru.g000sha256.reduktor.coroutines
 
-import io.reactivex.Flowable
-import io.reactivex.processors.BehaviorProcessor
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import ru.g000sha256.reduktor.core.Initializer
 import ru.g000sha256.reduktor.core.Logger
 import ru.g000sha256.reduktor.core.Reducer
 import ru.g000sha256.reduktor.core.SideEffect
 import ru.g000sha256.reduktor.core.Store
 
-class RxJavaStore<A, S>(
+class Store<A, S>(
     initialState: S,
     reducer: Reducer<A, S>,
     initializers: Iterable<Initializer<A, S>> = emptyList(),
@@ -16,12 +16,12 @@ class RxJavaStore<A, S>(
     logger: Logger = Logger {}
 ) {
 
-    val states: Flowable<S>
+    val states: Flow<S>
 
     init {
-        val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
-        states = behaviorProcessor.onBackpressureLatest()
-        Store(initialState, reducer, initializers, sideEffects, logger, behaviorProcessor::onNext)
+        val mutableStateFlow = MutableStateFlow(initialState)
+        states = mutableStateFlow
+        Store(initialState, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
     }
 
 }
