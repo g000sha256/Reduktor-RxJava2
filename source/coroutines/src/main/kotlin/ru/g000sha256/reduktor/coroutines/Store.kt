@@ -39,30 +39,9 @@ class Store<A, S>(
     fun release() {
         synchronized(any) {
             isReleased = true
-            clearAllTasks()
+            environment.tasks.clearAll()
             logger.invoke("-----RELEASED-----")
             logThread()
-        }
-    }
-
-    private fun clearAllTasks() {
-        if (mutableList.size > 0) {
-            mutableList
-                .toList()
-                .apply { mutableList.clear() }
-                .forEach {
-                    logTaskRemoved(it)
-                    it.cancel()
-                }
-        }
-        if (mutableMap.size > 0) {
-            mutableMap
-                .toMap()
-                .apply { mutableMap.clear() }
-                .forEach {
-                    logTaskRemoved(it.value)
-                    it.value.cancel()
-                }
         }
     }
 
@@ -172,7 +151,26 @@ class Store<A, S>(
         }
 
         override fun clearAll() {
-            synchronized(any) { clearAllTasks() }
+            synchronized(any) {
+                if (mutableList.size > 0) {
+                    mutableList
+                        .toList()
+                        .apply { mutableList.clear() }
+                        .forEach {
+                            logTaskRemoved(it)
+                            it.cancel()
+                        }
+                }
+                if (mutableMap.size > 0) {
+                    mutableMap
+                        .toMap()
+                        .apply { mutableMap.clear() }
+                        .forEach {
+                            logTaskRemoved(it.value)
+                            it.value.cancel()
+                        }
+                }
+            }
         }
 
         override fun plusAssign(task: Task) {
