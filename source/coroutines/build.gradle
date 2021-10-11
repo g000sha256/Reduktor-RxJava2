@@ -5,9 +5,6 @@ dependencies {
     implementation(lib.jetBrains.coroutines) { transitive false }
 }
 dependencies {
-    implementation project(":source:core")
-}
-dependencies {
     testImplementation libTest.jUnit
     testImplementation libTest.mockito
 }
