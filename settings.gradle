@@ -1,3 +1,4 @@
+include ":source:core"
 include ":source:coroutines"
 include ":source:rxjava2"
 include ":source:rxjava3"
