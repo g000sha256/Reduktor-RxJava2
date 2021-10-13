@@ -19,7 +19,6 @@ jacocoTestReport {
         xml.required = true
     }
 }
-
 repositories {
     mavenCentral()
 }
