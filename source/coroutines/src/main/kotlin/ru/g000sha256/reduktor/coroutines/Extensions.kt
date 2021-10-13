@@ -5,28 +5,26 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import ru.g000sha256.reduktor.core.Task
 
+// ToDo
 fun CoroutineScope.createTask(context: CoroutineContext? = null, block: suspend CoroutineScope.() -> Unit): Task {
     val coroutineContext = context ?: EmptyCoroutineContext
     val job = launch(coroutineContext, CoroutineStart.LAZY, block)
-    return TaskImpl(job)
+    return object : Task {
+
+        override fun cancel() {
+            val internalCancellationException = InternalCancellationException()
+            job.cancel(internalCancellationException)
+        }
+
+        override fun start(onComplete: (task: Task) -> Unit) {
+            job.invokeOnCompletion { if (it !is InternalCancellationException) onComplete(this) }
+            job.start()
+        }
+
+    }
 }
 
-private class TaskImpl(private val job: Job) : Task {
-
-    override fun cancel() {
-        val internalCancellationException = InternalCancellationException()
-        job.cancel(internalCancellationException)
-    }
-
-    override fun start(onComplete: (task: Task) -> Unit) {
-        job.invokeOnCompletion { if (it !is InternalCancellationException) onComplete(this) }
-        job.start()
-    }
-
-    private class InternalCancellationException : CancellationException()
-
-}
+private class InternalCancellationException : CancellationException()

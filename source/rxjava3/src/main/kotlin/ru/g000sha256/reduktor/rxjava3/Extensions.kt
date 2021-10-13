@@ -5,24 +5,14 @@ import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Action
 import io.reactivex.rxjava3.functions.Consumer
-
-infix fun <A> Actions<A>.post(action: A) {
-    post(action)
-}
-
-infix fun <A> Actions<A>.post(actions: Array<A>) {
-    post(*actions)
-}
-
-infix fun <A> Actions<A>.post(actions: Iterable<A>) {
-    post(actions)
-}
+import ru.g000sha256.reduktor.core.Task
 
 fun Completable.toTask(onError: Consumer<Throwable>? = null, onComplete: Action? = null): Task {
-    return Task { onFinish ->
-        return@Task subscribe(
+    return TaskImpl { onFinish ->
+        return@TaskImpl subscribe(
             {
                 onComplete?.run()
                 onFinish.run()
@@ -40,8 +30,8 @@ fun <A> Flowable<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return Task { onFinish ->
-        return@Task subscribe(
+    return TaskImpl { onFinish ->
+        return@TaskImpl subscribe(
             { onNext?.accept(it) },
             {
                 onError?.accept(it)
@@ -60,8 +50,8 @@ fun <A> Maybe<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return Task { onFinish ->
-        return@Task subscribe(
+    return TaskImpl { onFinish ->
+        return@TaskImpl subscribe(
             {
                 onSuccess?.accept(it)
                 onFinish.run()
@@ -83,8 +73,8 @@ fun <A> Observable<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return Task { onFinish ->
-        return@Task subscribe(
+    return TaskImpl { onFinish ->
+        return@TaskImpl subscribe(
             { onNext?.accept(it) },
             {
                 onError?.accept(it)
@@ -99,8 +89,8 @@ fun <A> Observable<A>.toTask(
 }
 
 fun <A> Single<A>.toTask(onSuccess: Consumer<A>? = null, onError: Consumer<Throwable>? = null): Task {
-    return Task { onFinish ->
-        return@Task subscribe(
+    return TaskImpl { onFinish ->
+        return@TaskImpl subscribe(
             {
                 onSuccess?.accept(it)
                 onFinish.run()
@@ -111,4 +101,27 @@ fun <A> Single<A>.toTask(onSuccess: Consumer<A>? = null, onError: Consumer<Throw
             }
         )
     }
+}
+
+// ToDo
+private class TaskImpl(private val creator: (Action) -> Disposable) : Task {
+
+    private var isDisposed = false
+    private var disposable: Disposable? = null
+
+    override fun cancel() {
+        isDisposed = true
+        dispose()
+    }
+
+    override fun start(onComplete: (task: Task) -> Unit) {
+        disposable = creator { onComplete(this) }
+        if (isDisposed) dispose()
+    }
+
+    private fun dispose() {
+        disposable?.dispose()
+        disposable = null
+    }
+
 }
