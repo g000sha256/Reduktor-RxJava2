@@ -10,8 +10,4 @@ interface Tasks {
 
     fun clearAll()
 
-    operator fun plusAssign(task: Task)
-
-    operator fun set(key: String, task: Task)
-
 }

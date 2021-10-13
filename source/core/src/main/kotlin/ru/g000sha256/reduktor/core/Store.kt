@@ -146,14 +146,6 @@ class Store<A, S>(
                 }
             }
 
-            override fun plusAssign(task: Task) {
-                add(task)
-            }
-
-            override fun set(key: String, task: Task) {
-                add(key, task)
-            }
-
             private fun add(task: Task, key: String?) {
                 val taskInfo = TaskInfo(task, id = ++counter, key = key)
                 taskInfoArrayList += taskInfo
