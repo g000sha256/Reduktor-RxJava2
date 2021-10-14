@@ -20,8 +20,8 @@ class Store<A, S>(
 
     init {
         val mutableStateFlow = MutableStateFlow(initialState)
-        states = mutableStateFlow
         Store(initialState, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
+        states = mutableStateFlow
     }
 
 }

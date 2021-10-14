@@ -20,8 +20,8 @@ class Store<A, S>(
 
     init {
         val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
-        states = behaviorProcessor.onBackpressureLatest()
         Store(initialState, reducer, initializers, sideEffects, logger, behaviorProcessor::onNext)
+        states = behaviorProcessor.onBackpressureLatest()
     }
 
 }
