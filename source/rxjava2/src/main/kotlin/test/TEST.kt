@@ -1,9 +1,10 @@
-package g000sha256.reduktor.rxjava3
+package test
 
 import g000sha256.reduktor.core.Environment
 import g000sha256.reduktor.core.plusAssign
 import g000sha256.reduktor.core.set
-import io.reactivex.rxjava3.core.Single
+import g000sha256.reduktor.rxjava2.toTask
+import io.reactivex.Single
 
 fun Environment<String>.test() {
     tasks += Single
