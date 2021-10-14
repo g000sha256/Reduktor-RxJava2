@@ -23,3 +23,14 @@ operator fun Tasks.plusAssign(task: Task) {
 operator fun Tasks.set(key: String, task: Task) {
     add(key, task)
 }
+
+fun <A, S> Store(
+    initialState: S,
+    reducer: Reducer<A, S>,
+    initializers: List<Initializer<A, S>> = ArrayList(),
+    sideEffects: List<SideEffect<A, S>> = ArrayList(),
+    logger: Logger = Logger {},
+    statesCallback: (state: S) -> Unit
+): Store<A, S> {
+    return Store(logger, reducer, statesCallback, initialState, initializers, sideEffects)
+}
