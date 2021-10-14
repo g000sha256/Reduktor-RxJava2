@@ -11,8 +11,8 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor
 class Store<A, S>(
     initialState: S,
     reducer: Reducer<A, S>,
-    initializers: Collection<Initializer<A, S>> = ArrayList(),
-    sideEffects: Collection<SideEffect<A, S>> = ArrayList(),
+    initializers: List<Initializer<A, S>> = ArrayList(),
+    sideEffects: List<SideEffect<A, S>> = ArrayList(),
     logger: Logger = Logger {}
 ) {
 
