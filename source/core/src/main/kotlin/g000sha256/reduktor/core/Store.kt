@@ -3,8 +3,8 @@ package g000sha256.reduktor.core
 class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
-    initializers: Collection<Initializer<A, S>> = ArrayList(),
-    sideEffects: Collection<SideEffect<A, S>> = ArrayList(),
+    initializers: List<Initializer<A, S>> = ArrayList(),
+    sideEffects: List<SideEffect<A, S>> = ArrayList(),
     private val logger: Logger = Logger {},
     private val statesCallback: (state: S) -> Unit
 ) {
@@ -12,7 +12,7 @@ class Store<A, S>(
     private val any = Any()
     private val initializersList: List<Initializer<A, S>> = ArrayList(initializers)
     private val sideEffectsList: List<SideEffect<A, S>> = ArrayList(sideEffects)
-    private val environmentsMutableList: MutableList<Environment<A>> = ArrayList(initializers.size + sideEffects.size)
+    private val environmentsMutableList: MutableList<Environment<A>>
 
     private val thread: Thread
         get() = Thread.currentThread()
@@ -22,6 +22,7 @@ class Store<A, S>(
     private var state = initialState
 
     init {
+        environmentsMutableList = ArrayList(initialCapacity = initializers.size + sideEffects.size)
         logger.invoke("--------INIT--------")
         logger.invoke("THREAD : ${thread.name}")
         logger.invoke("STATE  : $initialState")
