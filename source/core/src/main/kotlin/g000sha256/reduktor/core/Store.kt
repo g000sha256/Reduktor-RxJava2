@@ -3,16 +3,16 @@ package g000sha256.reduktor.core
 class Store<A, S>(
     initialState: S,
     private val reducer: Reducer<A, S>,
-    initializers: Iterable<Initializer<A, S>> = ArrayList(),
-    sideEffects: Iterable<SideEffect<A, S>> = ArrayList(),
+    initializers: Collection<Initializer<A, S>> = ArrayList(),
+    sideEffects: Collection<SideEffect<A, S>> = ArrayList(),
     private val logger: Logger = Logger {},
     private val statesCallback: (state: S) -> Unit
 ) {
 
-    private val environmentsArrayList: ArrayList<Environment<A>>
-    private val initializersArrayList = initializers.toArrayList()
-    private val sideEffectsArrayList = sideEffects.toArrayList()
     private val any = Any()
+    private val initializersList: List<Initializer<A, S>> = ArrayList(initializers)
+    private val sideEffectsList: List<SideEffect<A, S>> = ArrayList(sideEffects)
+    private val environmentsMutableList: MutableList<Environment<A>> = ArrayList(initializers.size + sideEffects.size)
 
     private val thread: Thread
         get() = Thread.currentThread()
@@ -22,18 +22,17 @@ class Store<A, S>(
     private var state = initialState
 
     init {
-        environmentsArrayList = ArrayList(initialCapacity = initializersArrayList.size + sideEffectsArrayList.size)
         logger.invoke("--------INIT--------")
         logger.invoke("THREAD : ${thread.name}")
         logger.invoke("STATE  : $initialState")
         statesCallback(initialState)
         val actions = createActions()
-        sideEffectsArrayList.forEach { _ -> environmentsArrayList += createEnvironment(actions) }
+        sideEffectsList.forEach { _ -> environmentsMutableList += createEnvironment(actions) }
         synchronized(any) {
-            initializersArrayList.forEach {
+            initializersList.forEach {
                 if (isReleased) return@forEach // ToDo
                 val environment = createEnvironment(actions)
-                environmentsArrayList += environment
+                environmentsMutableList += environment
                 it.apply { environment.invoke(initialState) }
             }
         }
@@ -43,7 +42,7 @@ class Store<A, S>(
         synchronized(any) {
             if (isReleased) return@synchronized
             isReleased = true
-            environmentsArrayList.forEach { it.tasks.clearAll() }
+            environmentsMutableList.forEach { it.tasks.clearAll() }
             logger.invoke("------RELEASED------")
             logger.invoke("THREAD : ${thread.name}")
         }
@@ -88,8 +87,8 @@ class Store<A, S>(
                     logger.invoke("STATE  < $newState")
                     statesCallback(newState)
                 }
-                sideEffectsArrayList.forEachIndexed { index, sideEffect ->
-                    val environment = environmentsArrayList[index]
+                sideEffectsList.forEachIndexed { index, sideEffect ->
+                    val environment = environmentsMutableList[index]
                     sideEffect.apply { environment.invoke(action, newState) }
                 }
             }
@@ -185,12 +184,6 @@ class Store<A, S>(
             }
 
         }
-    }
-
-    private fun <T> Iterable<T>.toArrayList(): ArrayList<T> {
-        val arrayList = ArrayList<T>()
-        forEach(arrayList::add)
-        return arrayList
     }
 
     private class TaskInfo(val task: Task, val id: Int, val key: String?)
