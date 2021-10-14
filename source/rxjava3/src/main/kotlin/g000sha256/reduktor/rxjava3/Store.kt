@@ -18,10 +18,16 @@ class Store<A, S>(
 
     val states: Flowable<S>
 
+    private val store: Store<A, S>
+
     init {
         val behaviorProcessor = BehaviorProcessor.createDefault(initialState)
-        Store(initialState, reducer, initializers, sideEffects, logger, behaviorProcessor::onNext)
+        store = Store(initialState, reducer, initializers, sideEffects, logger, behaviorProcessor::onNext)
         states = behaviorProcessor.onBackpressureLatest()
+    }
+
+    fun release() {
+        store.release()
     }
 
 }

@@ -18,10 +18,16 @@ class Store<A, S>(
 
     val states: Flow<S>
 
+    private val store: Store<A, S>
+
     init {
         val mutableStateFlow = MutableStateFlow(initialState)
-        Store(initialState, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
+        store = Store(initialState, reducer, initializers, sideEffects, logger) { mutableStateFlow.value = it }
         states = mutableStateFlow
+    }
+
+    fun release() {
+        store.release()
     }
 
 }
