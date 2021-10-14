@@ -21,18 +21,15 @@ class Store<A, S> internal constructor(
 
     init {
         val actions = ActionsImpl()
-        initializerEnvironmentsList = initializersList.map { it to EnvironmentImpl(actions) } // ToDo
-        sideEffectEnvironmentsList = sideEffectsList.map { it to EnvironmentImpl(actions) } // ToDo
+        initializerEnvironmentsList = initializersList.toEnvironmentsList(actions)
+        sideEffectEnvironmentsList = sideEffectsList.toEnvironmentsList(actions)
         val initialState = state
         logger.invoke("--------INIT--------")
         logger.invoke("THREAD : ${thread.name}")
         logger.invoke("STATE  : $initialState")
-        synchronized(any) {
-            initializerEnvironmentsList.forEach { // ToDo isReleased
-                it.first.apply { it.second.invoke(initialState) }
-            }
-            if (initialState === state) statesCallback(initialState)
-        }
+        statesCallback(initialState)
+        // ToDo isReleased
+        synchronized(any) { initializerEnvironmentsList.forEach { it.first.apply { it.second.invoke(initialState) } } }
     }
 
     fun release() {
@@ -44,6 +41,12 @@ class Store<A, S> internal constructor(
             logger.invoke("------RELEASED------")
             logger.invoke("THREAD : ${thread.name}")
         }
+    }
+
+    private fun <T> List<T>.toEnvironmentsList(actions: Actions<A>): List<Pair<T, Environment<A>>> {
+        val environmentsList = ArrayList<Pair<T, Environment<A>>>()
+        forEach { environmentsList += it to EnvironmentImpl(actions) }
+        return environmentsList
     }
 
     private inner class ActionsImpl : Actions<A> {
@@ -84,9 +87,8 @@ class Store<A, S> internal constructor(
                 logger.invoke("STATE  < $newState")
                 statesCallback(newState)
             }
-            sideEffectEnvironmentsList.forEach { // ToDo isReleased
-                it.first.apply { it.second.invoke(action, newState) }
-            }
+            // ToDo isReleased
+            sideEffectEnvironmentsList.forEach { it.first.apply { it.second.invoke(action, newState) } }
         }
 
     }
