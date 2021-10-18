@@ -4,6 +4,6 @@ interface Task {
 
     fun cancel()
 
-    fun start(onComplete: (task: Task) -> Unit)
+    fun start(onComplete: () -> Unit)
 
 }
