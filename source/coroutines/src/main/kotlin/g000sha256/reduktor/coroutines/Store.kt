@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class Store<A, S>(
     initialState: S,
     reducer: Reducer<A, S>,
-    initializers: List<Initializer<A, S>> = ArrayList(),
-    sideEffects: List<SideEffect<A, S>> = ArrayList(),
+    initializers: List<Initializer<A, S>> = emptyList(),
+    sideEffects: List<SideEffect<A, S>> = emptyList(),
     logger: Logger = Logger {}
 ) {
 

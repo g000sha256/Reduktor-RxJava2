@@ -3,8 +3,8 @@ package g000sha256.reduktor.core
 fun <A, S> Store(
     initialState: S,
     reducer: Reducer<A, S>,
-    initializers: List<Initializer<A, S>> = ArrayList(),
-    sideEffects: List<SideEffect<A, S>> = ArrayList(),
+    initializers: List<Initializer<A, S>> = emptyList(),
+    sideEffects: List<SideEffect<A, S>> = emptyList(),
     logger: Logger = Logger {},
     statesCallback: (state: S) -> Unit
 ): Store<A, S> {
