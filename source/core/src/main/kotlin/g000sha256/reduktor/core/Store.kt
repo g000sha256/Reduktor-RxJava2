@@ -22,12 +22,10 @@ class Store<A, S> internal constructor(
         val actions = ActionsImpl()
         initializerEnvironmentsList = initializersList.map { it to EnvironmentImpl(actions) }
         sideEffectEnvironmentsList = sideEffectsList.map { it to EnvironmentImpl(actions) }
-        val initialState = state
         logger.logTitle("--------INIT--------")
-        logger.invoke("STATE  : $initialState")
-        statesCallback(initialState)
-        // ToDo isReleased
-        synchronized(any) { initializerEnvironmentsList.forEach { it.first.apply { it.second.invoke(initialState) } } }
+        logger.invoke("STATE  : $state")
+        statesCallback(state)
+        init(state)
     }
 
     fun release() {
@@ -37,6 +35,15 @@ class Store<A, S> internal constructor(
             initializerEnvironmentsList.forEach { it.second.tasks.clearAll() }
             sideEffectEnvironmentsList.forEach { it.second.tasks.clearAll() }
             logger.logTitle("------RELEASED------")
+        }
+    }
+
+    private fun init(state: S) {
+        synchronized(any) {
+            initializerEnvironmentsList.forEach {
+                if (isReleased) return@synchronized
+                it.first.apply { it.second.invoke(state) }
+            }
         }
     }
 
@@ -53,7 +60,6 @@ class Store<A, S> internal constructor(
                 if (isReleased) return@synchronized
                 handleAction(action)
             }
-
         }
 
         override fun post(vararg actions: A) {
@@ -83,8 +89,10 @@ class Store<A, S> internal constructor(
                 logger.invoke("STATE  < $newState")
                 statesCallback(newState)
             }
-            // ToDo isReleased
-            sideEffectEnvironmentsList.forEach { it.first.apply { it.second.invoke(action, newState) } }
+            sideEffectEnvironmentsList.forEach {
+                if (isReleased) return
+                it.first.apply { it.second.invoke(action, newState) }
+            }
         }
 
     }
@@ -131,7 +139,7 @@ class Store<A, S> internal constructor(
                 checkContains(task)
                 key?.also { clear(it) }
                 val info = Info(task, id = ++counter, key = key)
-                infoMutableList += info
+                infoMutableList.add(info)
                 logTaskAdded(info)
                 task.start {
                     synchronized(any) {
@@ -142,8 +150,7 @@ class Store<A, S> internal constructor(
             }
 
             private fun checkContains(task: Task) {
-                val info = infoMutableList.find { it.task === task }
-                info ?: return
+                infoMutableList.find { it.task === task } ?: return
                 throw IllegalArgumentException("Task has already been added")
             }
 
