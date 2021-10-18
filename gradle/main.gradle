@@ -8,10 +8,6 @@ dependencies {
     implementation(lib.jetBrains.kotlin.stdLib) { transitive false }
     implementation(lib.jetBrains.kotlin.stdLibCommon) { transitive false }
 }
-dependencies {
-    testImplementation libTest.jUnit
-    testImplementation libTest.mockito
-}
 jacoco.toolVersion "0.8.7"
 jacocoTestReport {
     reports {

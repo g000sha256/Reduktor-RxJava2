@@ -11,8 +11,8 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 
 fun Completable.toTask(onError: Consumer<Throwable>? = null, onComplete: Action? = null): Task {
-    return TaskImpl { onFinish ->
-        return@TaskImpl subscribe(
+    return createTask { onFinish ->
+        return@createTask subscribe(
             {
                 onComplete?.run()
                 onFinish.run()
@@ -30,8 +30,8 @@ fun <A> Flowable<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return TaskImpl { onFinish ->
-        return@TaskImpl subscribe(
+    return createTask { onFinish ->
+        return@createTask subscribe(
             { onNext?.accept(it) },
             {
                 onError?.accept(it)
@@ -50,8 +50,8 @@ fun <A> Maybe<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return TaskImpl { onFinish ->
-        return@TaskImpl subscribe(
+    return createTask { onFinish ->
+        return@createTask subscribe(
             {
                 onSuccess?.accept(it)
                 onFinish.run()
@@ -73,8 +73,8 @@ fun <A> Observable<A>.toTask(
     onError: Consumer<Throwable>? = null,
     onComplete: Action? = null
 ): Task {
-    return TaskImpl { onFinish ->
-        return@TaskImpl subscribe(
+    return createTask { onFinish ->
+        return@createTask subscribe(
             { onNext?.accept(it) },
             {
                 onError?.accept(it)
@@ -89,8 +89,8 @@ fun <A> Observable<A>.toTask(
 }
 
 fun <A> Single<A>.toTask(onSuccess: Consumer<A>? = null, onError: Consumer<Throwable>? = null): Task {
-    return TaskImpl { onFinish ->
-        return@TaskImpl subscribe(
+    return createTask { onFinish ->
+        return@createTask subscribe(
             {
                 onSuccess?.accept(it)
                 onFinish.run()
@@ -103,20 +103,32 @@ fun <A> Single<A>.toTask(onSuccess: Consumer<A>? = null, onError: Consumer<Throw
     }
 }
 
-// ToDo
+private fun createTask(creator: (Action) -> Disposable): Task {
+    return TaskImpl(creator)
+}
+
 private class TaskImpl(private val creator: (Action) -> Disposable) : Task {
+
+    private val any = Any()
 
     private var isDisposed = false
     private var disposable: Disposable? = null
 
     override fun cancel() {
-        isDisposed = true
-        dispose()
+        synchronized(any) {
+            if (isDisposed) return@synchronized
+            isDisposed = true
+            dispose()
+        }
     }
 
-    override fun start(onComplete: (task: Task) -> Unit) {
-        disposable = creator { onComplete(this) }
-        if (isDisposed) dispose()
+    override fun start(onComplete: () -> Unit) {
+        synchronized(any) {
+            if (disposable != null) return@synchronized
+            if (isDisposed) return@synchronized
+            disposable = creator(onComplete)
+            if (isDisposed) dispose()
+        }
     }
 
     private fun dispose() {

@@ -8,20 +8,28 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 
-// ToDo
 fun CoroutineScope.createTask(context: CoroutineContext? = null, block: suspend CoroutineScope.() -> Unit): Task {
     val coroutineContext = context ?: EmptyCoroutineContext
     val job = launch(coroutineContext, CoroutineStart.LAZY, block)
     return object : Task {
 
+        private val any = Any()
+
         override fun cancel() {
-            val internalCancellationException = InternalCancellationException()
-            job.cancel(internalCancellationException)
+            synchronized(any) {
+                if (job.isActive) {
+                    val internalCancellationException = InternalCancellationException()
+                    job.cancel(internalCancellationException)
+                }
+            }
         }
 
-        override fun start(onComplete: (task: Task) -> Unit) {
-            job.invokeOnCompletion { if (it !is InternalCancellationException) onComplete(this) }
-            job.start()
+        override fun start(onComplete: () -> Unit) {
+            synchronized(any) {
+                if (job.isActive) return@synchronized
+                job.invokeOnCompletion { if (it !is InternalCancellationException) onComplete() }
+                job.start()
+            }
         }
 
     }
